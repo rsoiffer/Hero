@@ -13,6 +13,8 @@ import vr.ViveInput.ViveController;
 
 public class ControllerBehavior extends Behavior {
 
+    private static Vec3d OFFSET = new Vec3d(0, 0, 1.2);
+
     public ViveController controller;
     public Player player;
     public VoxelModel model = VoxelModel.load("controller.vox");
@@ -24,6 +26,11 @@ public class ControllerBehavior extends Behavior {
 
     public Vec3d pos() {
         return Camera.camera3d.position.add(controller.position());
+    }
+
+    public Vec3d pos(double exaggeration) {
+        return Camera.camera3d.position.add(controller.position()
+                .sub(OFFSET).mul(exaggeration).add(OFFSET));
     }
 
     @Override

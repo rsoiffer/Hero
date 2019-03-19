@@ -17,19 +17,20 @@ import util.math.Vec3d;
 
 public class World extends Behavior {
 
-    public static final int SIZE = 1000;
     public static final double FLOOR_HEIGHT = 4;
+    public static final double BUILDING_SIZE = 32;
+    public static final double STREET_WIDTH = 20;
 
     private static final String[] SPRITES = {"tower.png", "glass_0.png", "glass_1.png",
         "highrise_0.png", "highrise_1.png", "highrise_2.png", "highrise_3.png", "highrise_4.png"};
-    private static PBRTexture[] PBR_SPRITES = new PBRTexture[SPRITES.length];
+    private static final double[] SCALES = {2, 9, 3, 8, 4, 3, 3, 4};
+    private static final PBRTexture[] PBR_SPRITES = new PBRTexture[SPRITES.length];
 
     static {
         for (int i = 0; i < SPRITES.length; i++) {
-            PBR_SPRITES[i] = PBRTexture.nonPBR(SPRITES[i]);
+            PBR_SPRITES[i] = PBRTexture.loadAlbedo(SPRITES[i]);
         }
     }
-//    private static final double[] SCALES = {2, 9, 3, 8, 4, 3, 3, 4};
     private static final PBRTexture brick = new PBRTexture("brick");
     private static final PBRTexture concrete = new PBRTexture("concrete");
     private static final PBRTexture concreteFloor = new PBRTexture("concrete_floor");
@@ -46,21 +47,19 @@ public class World extends Behavior {
 
     @Override
     public void createInner() {
-        for (int i = 0; i < 2000; i += 84) {
-            for (int j = 0; j < 2000; j += 276) {
+        for (int i = 0; i < 2000; i += 2 * BUILDING_SIZE + STREET_WIDTH) {
+            for (int j = 0; j < 2000; j += 8 * BUILDING_SIZE + STREET_WIDTH) {
                 for (int k = 0; k < 200; k++) {
-                    double x = i + floor(Math.random() * 2) * 32;
-                    double y = j + floor(Math.random() * 8) * 32;
+                    double x = i + floor(Math.random() * 2) * BUILDING_SIZE;
+                    double y = j + floor(Math.random() * 8) * BUILDING_SIZE;
                     if (x != 0 || y != 0) {
                         if (!buildings.stream().anyMatch(b -> b.lower.x == x && b.lower.y == y)) {
-                            double w = 32;
-                            double h = 32;
                             double height = floor(Math.random() * 40 * heightNoise.noise2d(x, y, .005) + 10) * FLOOR_HEIGHT;
-                            buildings.add(new AABB(new Vec3d(x, y, 0), new Vec3d(x + w, y + h, height)));
+                            buildings.add(new AABB(new Vec3d(x, y, 0), new Vec3d(x + BUILDING_SIZE, y + BUILDING_SIZE, height)));
                         }
                     }
                 }
-                buildings.add(new AABB(new Vec3d(i, j, -SIZE), new Vec3d(i + 84, j + 276, 0)));
+                buildings.add(new AABB(new Vec3d(i, j, -500), new Vec3d(i + 2 * BUILDING_SIZE + STREET_WIDTH, j + 8 * BUILDING_SIZE + STREET_WIDTH, 0)));
             }
         }
 
@@ -92,8 +91,8 @@ public class World extends Behavior {
                 Vec3d dir2 = DIRS.get(j < 2 ? j + 2 : 3 - j).mul(b.size());
                 Vec3d dir3 = DIRS.get(5).mul(b.size());
                 Vec3d v = b.lower.add(b.size().div(2)).add(dir.div(2)).sub(dir2.div(2)).sub(dir3.div(2));
-                float texW = (float) Math.abs(dir2.x + dir2.y + dir2.z) / (float) (FLOOR_HEIGHT * 1);
-                float texH = (float) Math.abs(dir3.x + dir3.y + dir3.z) / (float) (FLOOR_HEIGHT * 1);
+                float texW = (float) Math.abs(dir2.x + dir2.y + dir2.z) / (float) (FLOOR_HEIGHT * SCALES[i]);
+                float texH = (float) Math.abs(dir3.x + dir3.y + dir3.z) / (float) (FLOOR_HEIGHT * SCALES[i]);
                 walls[i].addRectangle(v, dir2, dir3, new Vec2d(0, 0), new Vec2d(texW, 0), new Vec2d(0, texH));
             }
         }

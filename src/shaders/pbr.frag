@@ -1,7 +1,7 @@
 #version 330 core
 out vec4 FragColor;
-in vec2 TexCoords;
 in vec3 WorldPos;
+in vec2 TexCoords;
 in vec3 Normal;
 in vec3 Tangent;
 in vec3 Bitangent;
@@ -14,6 +14,9 @@ uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 uniform sampler2D heightMap;
 
+uniform sampler2D shadowMap;
+uniform mat4 lightSpaceMatrix;
+
 // lights
 uniform vec3 lightPositions[4];
 uniform vec3 lightColors[4];
@@ -21,6 +24,30 @@ uniform vec3 lightColors[4];
 uniform float heightScale;
 uniform float heightOffset;
 uniform vec3 camPos;
+
+// ----------------------------------------------------------------------------
+float ShadowCalculation()
+{
+    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(WorldPos, 1.0);
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    vec3 lightDir = normalize(lightPositions[2]);
+    float bias = max(0.005 * (1.0 - dot(Normal, lightDir)), 0.0005);
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+    return shadow;
+}
 
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
@@ -79,7 +106,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
     // depth of current layer
-    float currentLayerDepth = -heightOffset;
+    float currentLayerDepth = 0;
     // the amount to shift the texture coordinates per layer (from vector P)
     vec2 P = viewDir.xy / (viewDir.z + .000001) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
@@ -145,12 +172,12 @@ void main()
         if (i == 2) {
             L = normalize(vec3(.4, .7, 1));
             H = normalize(V + L);
-            radiance = vec3(1, .9, .8) * 5;
+            radiance = vec3(1, .9, .8) * 10 * (1 - ShadowCalculation());
         }
         if (i == 3) {
             L = normalize(vec3(-.4, -.3, .5));
             H = normalize(V + L);
-            radiance = vec3(1, .9, .8) * 2;
+            radiance = vec3(1, .9, .8) * .2;
         }
 
         // Cook-Torrance BRDF

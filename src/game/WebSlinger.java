@@ -62,9 +62,10 @@ public class WebSlinger extends Behavior {
             web = null;
         }
         if (web != null) {
-            prefLength = Math.min(prefLength, web.sub(controller.pos()).length() - controller.controller.trigger());
-            Vec3d pullDir = web.sub(controller.pos()).normalize();
-            double strength = 10 * Math.max(controller.pos().sub(web).length() - prefLength, 0);
+            double exag = 10;
+            prefLength = Math.min(prefLength, web.sub(controller.pos(exag)).length() - controller.controller.trigger());
+            Vec3d pullDir = web.sub(controller.pos(exag)).normalize();
+            double strength = 10 * Math.max(controller.pos(exag).sub(web).length() - prefLength, 0);
             controller.player.applyForce(pullDir.mul(strength), .02);
             controller.player.applyForce(controller.controller.forwards().mul(2), 0);
 
