@@ -1,8 +1,6 @@
 package game;
 
 import engine.Behavior;
-import engine.Layer;
-import static engine.Layer.RENDER3D;
 import graphics.PBRModel;
 import graphics.PBRTexture;
 import static graphics.voxels.VoxelRenderer.DIRS;
@@ -101,13 +99,7 @@ public class World extends Behavior {
         }
     }
 
-    @Override
-    public Layer layer() {
-        return RENDER3D;
-    }
-
-    @Override
-    public void step() {
+    public void render() {
         ground.draw(sidewalk);
         roofs.draw(concreteFloor);
         for (int i = 0; i < walls.length; i++) {

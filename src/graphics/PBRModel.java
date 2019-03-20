@@ -1,6 +1,5 @@
 package graphics;
 
-import static graphics.PBRTexture.PBR;
 import graphics.opengl.BufferObject;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.VertexArrayObject;
@@ -63,8 +62,9 @@ public class PBRModel {
     }
 
     public void draw(PBRTexture tex) {
-        PBRTexture.updateUniforms();
-        bindAll(PBR, vao, tex);
+//        PBRTexture.updateUniforms();
+//        bindAll(PBR, vao, tex);
+        bindAll(vao, tex);
         glDrawArrays(GL_TRIANGLES, 0, numVertices);
     }
 
