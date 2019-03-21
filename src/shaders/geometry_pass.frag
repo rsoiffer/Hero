@@ -3,7 +3,7 @@
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
-layout (location = 3) out vec4 gMRAH;
+layout (location = 3) out vec3 gMRA;
 
 in vec3 FragPos;
 in vec2 TexCoords;
@@ -76,8 +76,7 @@ void main()
     gPosition = FragPos;
     gNormal = normalize(TBN * (texture(normalMap, texCoords).xyz * 2.0 - 1.0));
     gAlbedo = texture(albedoMap, texCoords).rgb;
-    gMRAH.r = texture(metallicMap, texCoords).r;
-    gMRAH.g = texture(roughnessMap, texCoords).r;
-    gMRAH.b = texture(aoMap, texCoords).r;
-    gMRAH.a = texture(heightMap, texCoords).r;
+    gMRA.r = texture(metallicMap, texCoords).r;
+    gMRA.g = texture(roughnessMap, texCoords).r;
+    gMRA.b = texture(aoMap, texCoords).r;
 }

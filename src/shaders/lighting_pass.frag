@@ -8,16 +8,18 @@ in vec2 TexCoords;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
-uniform sampler2D gMRAH;
+uniform sampler2D gMRA;
 
 // lights
-uniform vec3 lightPositions[4];
-uniform vec3 lightColors[4];
+uniform vec3 sunColor;
+uniform vec3 sunDirection;
 
 const int NUM_CASCADES = 5;
 uniform sampler2DShadow shadowMap[NUM_CASCADES];
 uniform mat4 lightSpaceMatrix[NUM_CASCADES];
 uniform float cascadeEndClipSpace[NUM_CASCADES];
+
+uniform sampler2D brdfLUT;
 
 uniform mat4 projectionViewMatrix;
 uniform vec3 camPos;
@@ -35,7 +37,7 @@ float ShadowCalculation(vec3 FragPos, vec3 Normal)
             vec4 fragPosLightSpace = lightSpaceMatrix[i] * vec4(FragPos, 1.0);
             vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
             projCoords = projCoords * 0.5 + 0.5;
-            vec3 lightDir = normalize(lightPositions[2]);
+            vec3 lightDir = normalize(sunDirection);
             float bias = max(0.01 * (1.0 - dot(Normal, lightDir)), 0.001);
             float currentDepth = projCoords.z - bias;
             shadow = texture(shadowMap[i], vec3(projCoords.xy, currentDepth));
@@ -80,9 +82,28 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 // ----------------------------------------------------------------------------
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+// ----------------------------------------------------------------------------
+vec3 CalculateLighting(vec3 Normal, vec3 Albedo, float Metallic, float Roughness,
+                        vec3 viewDir, vec3 F0, vec3 L, vec3 radiance)
+{
+    vec3 H        = normalize(viewDir + L);
+    float NDF     = DistributionGGX(Normal, H, Roughness);
+    float G       = GeometrySmith(Normal, viewDir, L, Roughness);
+    vec3 kS       = FresnelSchlick(max(dot(H, viewDir), 0.0), F0);
+    vec3 specular = NDF * G * kS / (4 * max(dot(Normal, viewDir), 0.0) * max(dot(Normal, L), 0.0) + 0.001);
+    vec3 kD       = (vec3(1.0) - kS) * (1.0 - Metallic);
+    float NdotL   = max(dot(Normal, L), 0.0);
+    return (kD * Albedo / PI + specular) * radiance * NdotL;
+}
+// ----------------------------------------------------------------------------
+vec3 FakeIrradiance(vec3 dir, float roughness)
+{
+    float x = tanh(cos(dir.z) / (roughness + .01));
+    return ((.5 + .5 * x) * vec3(.4, .7, 1) + (.5 - .5 * x) * vec3(.3, .3, .3)) * .1;
 }
 // ----------------------------------------------------------------------------
 void main()
@@ -90,49 +111,46 @@ void main()
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Albedo = texture(gAlbedo, TexCoords).rgb;
-    float Metallic = texture(gMRAH, TexCoords).r;
-    float Roughness = texture(gMRAH, TexCoords).g;
-    float AO = texture(gMRAH, TexCoords).b;
-    float Height = texture(gMRAH, TexCoords).a;
+    float Metallic = texture(gMRA, TexCoords).r;
+    float Roughness = texture(gMRA, TexCoords).g;
+    float AO = texture(gMRA, TexCoords).b;
 
     if (length(Normal) == 0) discard;
-
     vec3 viewDir = normalize(camPos - FragPos);
+    vec3 reflectDir = reflect(-viewDir, Normal);
     vec3 F0 = mix(vec3(0.04), Albedo, Metallic);
-    vec3 Lo = vec3(0.0);
-    for(int i = 0; i < 4; ++i)
-    {
-        // calculate per-light radiance
-        vec3 L = normalize(lightPositions[i] - FragPos);
-        float distance = length(lightPositions[i] - FragPos);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lightColors[i] * attenuation;
-        if (i == 2) {
-            L = normalize(vec3(.4, .7, 1));
-            radiance = vec3(1, .9, .8) * 10 * (1 - ShadowCalculation(FragPos, Normal));
-        }
-        if (i == 3) {
-            L = normalize(vec3(-.4, -.3, .5));
-            radiance = vec3(1, .9, .8) * .2;
-        }
-        vec3 H = normalize(viewDir + L);
+    vec3 color = vec3(0.0);
 
-        // Cook-Torrance BRDF
-        float NDF     = DistributionGGX(Normal, H, Roughness);
-        float G       = GeometrySmith(Normal, viewDir, L, Roughness);
-        vec3 F        = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
-        vec3 specular = NDF * G * F / (4 * max(dot(Normal, viewDir), 0.0) * max(dot(Normal, L), 0.0) + 0.001);
-        vec3 kD       = (vec3(1.0) - F) * (1.0 - Metallic);
-        float NdotL   = max(dot(Normal, L), 0.0);
-        Lo += (kD * Albedo / PI + specular) * radiance * NdotL;
-    }
-    // ambient lighting
-    vec3 ambient = vec3(0.03) * Albedo * AO;
+    // sun lighting
+    vec3 radiance = sunColor * (1 - ShadowCalculation(FragPos, Normal));
+    color += CalculateLighting(Normal, Albedo, Metallic, Roughness, viewDir, F0, sunDirection, radiance);
 
-    vec3 color = ambient + Lo;
+    // real ambient IBL
+    /*vec3 kS = FresnelSchlick(max(dot(Normal, viewDir), 0.0), F0);
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - Metallic);
+    vec3 irradiance = texture(irradianceMap, Normal).rgb;
+    vec3 diffuse = kD * irradiance * Albedo;
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, R, Roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(Normal, viewDir), 0.0), Roughness)).rg;
+    vec3 specular = prefilteredColor * (kS * envBRDF.x + envBRDF.y);
+    color += (diffuse + specular) * AO;*/
+
+    // fake ambient IBL
+    vec3 kS = FresnelSchlick(max(dot(Normal, viewDir), 0.0), F0);
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - Metallic);
+    vec3 irradiance = FakeIrradiance(Normal, 1);
+    vec3 diffuse = kD * irradiance * Albedo;
+    vec3 prefilteredColor = FakeIrradiance(reflectDir, Roughness);
+    vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(Normal, viewDir), 0.0), Roughness)).rg;
+    vec3 specular = prefilteredColor * (kS * envBRDF.x + envBRDF.y);
+    color += (diffuse + specular) * AO;
+
+    // simple ambient lighting
+    // color += vec3(0.03) * Albedo * AO;
+
+    // color correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
     FragColor = vec4(color, 1.0);
-
-    // FragColor = vec4(FragPos/10, 1.0);
 }

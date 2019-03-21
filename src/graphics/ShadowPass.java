@@ -3,10 +3,9 @@ package graphics;
 import engine.Behavior;
 import engine.Layer;
 import static engine.Layer.POSTUPDATE;
-import game.World;
 import graphics.opengl.Framebuffer;
 import graphics.opengl.GLState;
-import graphics.opengl.ShaderProgram;
+import graphics.opengl.Shader;
 import graphics.opengl.Texture;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,16 +33,16 @@ import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_MODE;
 import static org.lwjgl.opengl.GL30.GL_COMPARE_REF_TO_TEXTURE;
 import static org.lwjgl.opengl.GL30.GL_DEPTH_ATTACHMENT;
 import physics.AABB;
-import util.Resources;
 import util.math.Transformation;
 import util.math.Vec3d;
 
 public class ShadowPass extends Behavior {
 
-    public World w;
+    public Runnable renderTask;
     public double zMin = -1, zMax = 1;
+    public Vec3d sunDirection;
 
-    private ShaderProgram shadow;
+    private Shader shader;
     private Framebuffer shadowMap;
     private Texture shadowTexture;
     private Camera sunCam;
@@ -57,7 +56,7 @@ public class ShadowPass extends Behavior {
 
     @Override
     public void createInner() {
-        shadow = Resources.loadShaderProgram("color", "empty");
+        shader = Shader.load("shadow_pass");
         shadowMap = new Framebuffer(4096, 4096);
         shadowTexture = shadowMap.attachTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, GL_LINEAR, GL_DEPTH_ATTACHMENT);
         sunCam = new Camera() {
@@ -69,7 +68,7 @@ public class ShadowPass extends Behavior {
 
             @Override
             public Matrix4d viewMatrix() {
-                return new Matrix4d().lookAt(new Vector3d(.4, .7, 1), new Vector3d(0, 0, 0), new Vector3d(0, 0, 1));
+                return new Matrix4d().lookAt(sunDirection.toJOML(), new Vector3d(0, 0, 0), new Vector3d(0, 0, 1));
             }
         };
         shadowTexture.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -105,12 +104,12 @@ public class ShadowPass extends Behavior {
     @Override
     public void step() {
         Camera.current = sunCam;
-        shadow.setMVP(Transformation.IDENTITY);
+        shader.setMVP(Transformation.IDENTITY);
         shadowMap.bind();
         glEnable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT);
-        w.render();
+        renderTask.run();
         glCullFace(GL_BACK);
         GLState.bindFramebuffer(null);
         Camera.current = Camera.camera3d;

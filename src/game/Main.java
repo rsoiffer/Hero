@@ -5,17 +5,17 @@ import engine.Core;
 import static engine.Core.dt;
 import engine.Input;
 import static engine.Layer.PREUPDATE;
-import static engine.Layer.RENDER3D;
 import static engine.Layer.UPDATE;
+import graphics.AssimpModel;
 import graphics.Camera;
 import static graphics.Camera.camera3d;
-import graphics.Color;
 import graphics.GeometryPass;
 import graphics.LightingPass;
+import graphics.PBRTexture;
 import graphics.ShadowPass;
 import graphics.Window;
 import graphics.opengl.Framebuffer;
-import graphics.voxels.VoxelModel;
+import graphics.opengl.GLState;
 import java.util.LinkedList;
 import java.util.List;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
@@ -73,32 +73,36 @@ public class Main {
             if (Input.keyDown(GLFW_KEY_LEFT_SHIFT)) {
                 camera3d.position = camera3d.position.add(camera3d.up.setLength(-dt() * flySpeed));
             }
-
-//            try {
-//                Thread.sleep(10);
-//            } catch (InterruptedException ex) {
-//                ex.printStackTrace();
-//            }
-        });
-
-        RENDER3D.onStep(() -> {
-            VoxelModel.load("controller.vox").render(Transformation.create(new Vec3d(5, 5, 1), Quaternion.IDENTITY, 1 / 32.), Color.WHITE);
         });
 
         World w = new World();
         w.create();
         camera3d.position = new Vec3d(10, 10, 10);
 
+        AssimpModel m = AssimpModel.load("Cerberus.fbx");
+        PBRTexture t = PBRTexture.loadFromFolder("Cerberus", "tga");
+
+        Runnable renderTask = () -> {
+            w.render();
+            GLState.getShaderProgram().setUniform("model", Transformation.create(
+                    Camera.camera3d.position.add(Camera.camera3d.facing().mul(2)), Quaternion.IDENTITY, .01).modelMatrix());
+            m.draw(t);
+        };
+
+        Vec3d sunColor = new Vec3d(10, 8, 6);
+        Vec3d sunDirection = new Vec3d(.4, -.2, 1);
+
         GeometryPass gp = new GeometryPass();
-        gp.w = w;
+        gp.renderTask = renderTask;
         gp.create();
 
         List<ShadowPass> spList = new LinkedList();
         for (int i = 0; i < 5; i++) {
             ShadowPass sp = new ShadowPass();
-            sp.w = w;
+            sp.renderTask = renderTask;
             sp.zMin = i == 0 ? -1 : (1 - Math.pow(.3, i + 2));
             sp.zMax = 1 - Math.pow(.3, i + 3);
+            sp.sunDirection = sunDirection;
             sp.create();
             spList.add(sp);
         }
@@ -107,8 +111,19 @@ public class Main {
         lp.clearColor = clearColor;
         lp.gp = gp;
         lp.spList = spList;
+        lp.sunColor = sunColor;
+        lp.sunDirection = sunDirection;
         lp.create();
 
+//        Mutable<Double> time = new Mutable(0.);
+//        UPDATE.onStep(() -> {
+//            time.o += dt() * .1;
+//            Vec3d sd = new Vec3d(Math.sin(time.o), Math.cos(time.o), 1);
+//            for (int i = 0; i < 5; i++) {
+//                spList.get(i).sunDirection = sd;
+//            }
+//            lp.sunDirection = sd;
+//        });
         Core.run();
     }
 }

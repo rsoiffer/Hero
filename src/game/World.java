@@ -1,7 +1,7 @@
 package game;
 
 import engine.Behavior;
-import graphics.PBRModel;
+import graphics.CustomModel;
 import graphics.PBRTexture;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
@@ -29,19 +29,19 @@ public class World extends Behavior {
             PBR_SPRITES[i] = PBRTexture.loadAlbedo(SPRITES[i]);
         }
     }
-    private static final PBRTexture brick = new PBRTexture("brick");
-    private static final PBRTexture concrete = new PBRTexture("concrete");
-    private static final PBRTexture concreteFloor = new PBRTexture("concrete_floor");
-    private static final PBRTexture obsidian = new PBRTexture("obsidian");
-    private static final PBRTexture road = new PBRTexture("road");
-    private static final PBRTexture sidewalk = new PBRTexture("sidewalk");
-    private static final PBRTexture whiteBrick = new PBRTexture("white_brick");
+    private static final PBRTexture brick = PBRTexture.loadFromFolder("brick");
+    private static final PBRTexture concrete = PBRTexture.loadFromFolder("concrete");
+    private static final PBRTexture concreteFloor = PBRTexture.loadFromFolder("concrete_floor");
+    private static final PBRTexture obsidian = PBRTexture.loadFromFolder("obsidian");
+    private static final PBRTexture road = PBRTexture.loadFromFolder("road");
+    private static final PBRTexture sidewalk = PBRTexture.loadFromFolder("sidewalk");
+    private static final PBRTexture whiteBrick = PBRTexture.loadFromFolder("white_brick");
 
     public List<AABB> buildings = new ArrayList();
     private Noise colorNoise = new Noise(new Random());
     private Noise heightNoise = new Noise(new Random());
-    private PBRModel ground, roofs;
-    private PBRModel[] walls = new PBRModel[SPRITES.length];
+    private CustomModel ground, roofs;
+    private CustomModel[] walls = new CustomModel[SPRITES.length];
 
     @Override
     public void createInner() {
@@ -61,7 +61,7 @@ public class World extends Behavior {
             }
         }
 
-        ground = new PBRModel();
+        ground = new CustomModel();
         for (AABB b : buildings) {
             if (b.upper.z == 0) {
                 ground.addRectangle(b.lower.setZ(b.upper.z), b.size().setY(0).setZ(0), b.size().setX(0).setZ(0),
@@ -70,7 +70,7 @@ public class World extends Behavior {
         }
         ground.createVAO();
 
-        roofs = new PBRModel();
+        roofs = new CustomModel();
         for (AABB b : buildings) {
             if (b.upper.z != 0) {
                 roofs.addRectangle(b.lower.setZ(b.upper.z), b.size().setY(0).setZ(0), b.size().setX(0).setZ(0),
@@ -80,7 +80,7 @@ public class World extends Behavior {
         roofs.createVAO();
 
         for (int i = 0; i < walls.length; i++) {
-            walls[i] = new PBRModel();
+            walls[i] = new CustomModel();
         }
         for (AABB b : buildings) {
             int i = floor(Math.random() * walls.length);
