@@ -35,6 +35,7 @@ public class World extends Behavior {
     private static final PBRTexture obsidian = PBRTexture.loadFromFolder("obsidian");
     private static final PBRTexture road = PBRTexture.loadFromFolder("road");
     private static final PBRTexture sidewalk = PBRTexture.loadFromFolder("sidewalk");
+    private static final PBRTexture snow = PBRTexture.loadFromFolder("snow");
     private static final PBRTexture whiteBrick = PBRTexture.loadFromFolder("white_brick");
 
     public List<AABB> buildings = new ArrayList();
@@ -100,10 +101,13 @@ public class World extends Behavior {
     }
 
     public void render() {
-        ground.draw(sidewalk);
-        roofs.draw(concreteFloor);
+        sidewalk.bind();
+        ground.draw();
+        concreteFloor.bind();
+        roofs.draw();
         for (int i = 0; i < walls.length; i++) {
-            walls[i].draw(PBR_SPRITES[i]);
+            PBR_SPRITES[i].bind();
+            walls[i].draw();
         }
     }
 }

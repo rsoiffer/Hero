@@ -31,6 +31,7 @@ public class AssimpModel {
     public AssimpModel(AIScene scene) {
         List<Vertex> vertices = new ArrayList();
         List<Integer> indices = new ArrayList();
+
         for (int i = 0; i < scene.mNumMeshes(); i++) {
             AIMesh mesh = AIMesh.create(scene.mMeshes().get(i));
             for (int j = 0; j < mesh.mNumVertices(); j++) {

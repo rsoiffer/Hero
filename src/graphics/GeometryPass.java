@@ -9,6 +9,7 @@ import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
+import java.util.function.Consumer;
 import org.joml.Vector4d;
 import static org.lwjgl.opengl.GL11C.GL_BLEND;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_TEST;
@@ -30,7 +31,7 @@ import util.math.Vec3d;
 
 public class GeometryPass extends Behavior {
 
-    public Runnable renderTask;
+    public Consumer<Boolean> renderTask;
 
     private Shader shader;
     private Framebuffer gBuffer;
@@ -42,7 +43,7 @@ public class GeometryPass extends Behavior {
 
     @Override
     public void createInner() {
-        shader = Shader.load("geometry_pass");
+        shader = Shader.load("geometry_pass_pbr");
         shader.setUniform("albedoMap", 0);
         shader.setUniform("normalMap", 1);
         shader.setUniform("metallicMap", 2);
@@ -79,7 +80,7 @@ public class GeometryPass extends Behavior {
         shader.setMVP(Transformation.IDENTITY);
         Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
         shader.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
-        renderTask.run();
+        renderTask.accept(true);
         GLState.bindFramebuffer(null);
     }
 }

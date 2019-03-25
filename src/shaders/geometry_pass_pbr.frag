@@ -25,12 +25,12 @@ uniform float heightScale = -0.02;
 uniform float heightOffset = 0.5;
 
 // ----------------------------------------------------------------------------
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
+vec2 ParallaxMapping(vec2 texCoords, vec3 N, vec3 viewDir)
 {
     // number of depth layers
     const float minLayers = 8;
     const float maxLayers = 32;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(Normal, viewDir)));
+    float numLayers = mix(maxLayers, minLayers, abs(dot(N, viewDir)));
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
     // depth of current layer
@@ -69,9 +69,15 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 // ----------------------------------------------------------------------------
 void main()
 {
-    mat3 TBN = mat3(Tangent, Bitangent, Normal);
+    vec3 T = normalize(Tangent);
+    vec3 N = normalize(Normal);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
+    mat3 TBN = mat3(T, B, N);
+    // mat3 TBN = mat3(Tangent, Bitangent, Normal);
+
     vec3 viewDir = normalize(transpose(TBN) * (camPos - FragPos));
-    vec2 texCoords = ParallaxMapping(TexCoords, viewDir);
+    vec2 texCoords = ParallaxMapping(TexCoords, N, viewDir);
 
     gPosition = FragPos;
     gNormal = normalize(TBN * (texture(normalMap, texCoords).xyz * 2.0 - 1.0));

@@ -27,12 +27,12 @@ public class Vertex {
     }
 
     public static VertexArrayObject createVAO(List<Vertex> vertices) {
+        return createVAO(createVBO(vertices));
+    }
+
+    public static VertexArrayObject createVAO(BufferObject vbo) {
         return VertexArrayObject.createVAO(() -> {
-            float[] data = new float[14 * vertices.size()];
-            for (int i = 0; i < vertices.size(); i++) {
-                System.arraycopy(vertices.get(i).data(), 0, data, 14 * i, 14);
-            }
-            BufferObject vbo = new BufferObject(GL_ARRAY_BUFFER, data);
+            vbo.bind();
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 14 * 4, 0);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(1, 2, GL_FLOAT, false, 14 * 4, 12);
@@ -46,6 +46,12 @@ public class Vertex {
         });
     }
 
+    public static BufferObject createVBO(List<Vertex> vertices) {
+        BufferObject vbo = new BufferObject(GL_ARRAY_BUFFER);
+        fillVBO(vbo, vertices);
+        return vbo;
+    }
+
     private float[] data() {
         return new float[]{
             (float) position.x, (float) position.y, (float) position.z,
@@ -54,6 +60,14 @@ public class Vertex {
             (float) tangent.x, (float) tangent.y, (float) tangent.z,
             (float) bitangent.x, (float) bitangent.y, (float) bitangent.z
         };
+    }
+
+    public static void fillVBO(BufferObject vbo, List<Vertex> vertices) {
+        float[] data = new float[14 * vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            System.arraycopy(vertices.get(i).data(), 0, data, 14 * i, 14);
+        }
+        vbo.putData(data);
     }
 
     @Override

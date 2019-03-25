@@ -5,6 +5,8 @@ import graphics.opengl.Texture;
 
 public class PBRTexture extends GLObject {
 
+    public static final PBRTexture DEFAULT = loadFromFolder("default");
+
     private final Texture albedo, normal, metallic, roughness, ao, height;
 
     public PBRTexture(String albedoName, String normalName, String metallicName,

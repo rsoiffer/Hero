@@ -1,9 +1,11 @@
 package graphics;
 
+import graphics.opengl.BufferObject;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
@@ -14,6 +16,7 @@ public class CustomModel {
 
     private final List<Vertex> vertices = new ArrayList();
     private int numVertices;
+    private BufferObject vbo;
     private VertexArrayObject vao;
 
     public void addRectangle(Vec3d p, Vec3d edge1, Vec3d edge2, Vec2d uv, Vec2d uvd1, Vec2d uvd2) {
@@ -34,13 +37,35 @@ public class CustomModel {
         ));
     }
 
-    public void createVAO() {
-        numVertices = vertices.size();
-        vao = Vertex.createVAO(vertices);
+    public void clear() {
+        vertices.clear();
     }
 
-    public void draw(PBRTexture tex) {
-        bindAll(vao, tex);
+    public void createVAO() {
+        numVertices = vertices.size();
+        vbo = Vertex.createVBO(vertices);
+        vao = Vertex.createVAO(vbo);
+    }
+
+    public void draw() {
+        bindAll(vao);
         glDrawArrays(GL_TRIANGLES, 0, numVertices);
+    }
+
+    public void smoothVertexNormals() {
+        HashMap<Vec3d, Vec3d> normals = new HashMap();
+        for (Vertex v : vertices) {
+            normals.compute(v.position, (key, val) -> val == null ? v.normal : val.add(v.normal));
+        }
+        for (int i = 0; i < vertices.size(); i++) {
+            Vertex v = vertices.get(i);
+            Vertex v2 = new Vertex(v.position, v.texCoord, normals.get(v.position).normalize(), v.tangent, v.bitangent);
+            vertices.set(i, v2);
+        }
+    }
+
+    public void updateVBO() {
+        numVertices = vertices.size();
+        Vertex.fillVBO(vbo, vertices);
     }
 }
