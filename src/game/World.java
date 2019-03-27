@@ -1,6 +1,5 @@
 package game;
 
-import graphics.Camera;
 import graphics.CustomModel;
 import static graphics.GeometryPass.SHADER_PBR;
 import graphics.PBRTexture;
@@ -9,7 +8,6 @@ import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import org.joml.Vector4d;
 import physics.AABB;
 import util.Noise;
 import static util.math.MathUtils.floor;
@@ -104,24 +102,25 @@ public class World implements Renderable {
     }
 
     @Override
-    public void bindGeomShader() {
-        Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
-        SHADER_PBR.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
-    }
-
-    @Override
-    public Transformation getTransform() {
-        return Transformation.IDENTITY;
-    }
-
-    @Override
-    public void render() {
+    public void renderGeom() {
+        SHADER_PBR.bind();
+        setTransform(Transformation.IDENTITY);
         sidewalk.bind();
         ground.render();
         concreteFloor.bind();
         roofs.render();
         for (int i = 0; i < walls.length; i++) {
             PBR_SPRITES[i].bind();
+            walls[i].render();
+        }
+    }
+
+    @Override
+    public void renderShadow() {
+        setTransform(Transformation.IDENTITY);
+        ground.render();
+        roofs.render();
+        for (int i = 0; i < walls.length; i++) {
             walls[i].render();
         }
     }

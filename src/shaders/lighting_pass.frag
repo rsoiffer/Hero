@@ -106,6 +106,24 @@ vec3 FakeIrradiance(vec3 dir, float roughness)
     return ((.5 + .5 * x) * vec3(.4, .7, 1) + (.5 - .5 * x) * vec3(.3, .3, .3)) * .1;
 }
 // ----------------------------------------------------------------------------
+vec3 rgb2hsv(vec3 c)
+{
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+// ----------------------------------------------------------------------------
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+// ----------------------------------------------------------------------------
 void main()
 {
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
@@ -150,7 +168,17 @@ void main()
     // color += vec3(0.03) * Albedo * AO;
 
     // color correction
-    color = color / (color + vec3(1.0));
+
+    // color = max(vec3(0.0), color - 0.004);
+    // color = (color*(6.2*color+.5))/(color*(6.2*color+1.7)+0.06);
+
+    color = rgb2hsv(color);
+    color = vec3(color.xy, color.z / (1 + color.z));
+    color = hsv2rgb(color);
     color = pow(color, vec3(1.0/2.2));
+
+    // color = color / (color + vec3(1.0));
+    // color = pow(color, vec3(1.0/2.2));
+
     FragColor = vec4(color, 1.0);
 }

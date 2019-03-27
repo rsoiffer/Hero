@@ -21,7 +21,6 @@ import org.lwjgl.openvr.VR;
 import org.lwjgl.openvr.VRRenderModels;
 import org.lwjgl.system.MemoryStack;
 import static org.lwjgl.system.MemoryStack.stackPush;
-import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
 import vr.ViveInput.ViveController;
@@ -82,17 +81,16 @@ public class OpenVRModel implements Renderable {
     }
 
     @Override
-    public void bindGeomShader() {
+    public void renderGeom() {
         bindAll(DIFFUSE_SHADER, diffuseTexture);
+        setTransform(vc.pose());
+        vao.bind();
+        glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
     }
 
     @Override
-    public Transformation getTransform() {
-        return new Transformation(vc.pose());
-    }
-
-    @Override
-    public void render() {
+    public void renderShadow() {
+        setTransform(vc.pose());
         vao.bind();
         glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
     }

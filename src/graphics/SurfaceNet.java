@@ -230,11 +230,21 @@ public class SurfaceNet implements Model {
                     }
                     // List<Vec3d> p = e.neighbors().stream().map(v -> points[(int) v.x][(int) v.y][(int) v.z]).collect(Collectors.toList());
                     if (e.y0 == e.y1 != e.d0 > BOUNDARY) {
-                        model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(1), new Vec2d(1, 0), p.get(2), new Vec2d(0, 1));
-                        model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(2), new Vec2d(0, 1), p.get(1), new Vec2d(1, 0));
+                        if (e.x0 == e.x1) {
+                            model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(1), new Vec2d(1, 0), p.get(2), new Vec2d(0, 1));
+                            model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(2), new Vec2d(0, 1), p.get(1), new Vec2d(1, 0));
+                        } else {
+                            model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(1), new Vec2d(0, 1), p.get(2), new Vec2d(1, 0));
+                            model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(2), new Vec2d(1, 0), p.get(1), new Vec2d(0, 1));
+                        }
                     } else {
-                        model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(2), new Vec2d(0, 1), p.get(1), new Vec2d(1, 0));
-                        model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(1), new Vec2d(1, 0), p.get(2), new Vec2d(0, 1));
+                        if (e.x0 == e.x1) {
+                            model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(2), new Vec2d(0, 1), p.get(1), new Vec2d(1, 0));
+                            model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(1), new Vec2d(1, 0), p.get(2), new Vec2d(0, 1));
+                        } else {
+                            model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(2), new Vec2d(1, 0), p.get(1), new Vec2d(0, 1));
+                            model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(1), new Vec2d(0, 1), p.get(2), new Vec2d(1, 0));
+                        }
                     }
                 }
             }

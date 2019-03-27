@@ -110,7 +110,7 @@ public class ShadowPass extends Behavior {
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT);
         for (Renderable r : renderTask) {
-            r.renderTransformed();
+            r.renderShadow();
         }
         glCullFace(GL_BACK);
         GLState.bindFramebuffer(null);

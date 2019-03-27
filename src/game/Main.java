@@ -10,10 +10,10 @@ import graphics.Camera;
 import static graphics.Camera.camera3d;
 import graphics.Color;
 import graphics.GeometryPass;
-import static graphics.GeometryPass.SHADER_PBR;
 import graphics.LightingPass;
 import graphics.PBRTexture;
 import graphics.Renderable;
+import graphics.Renderable.RenderablePBR;
 import graphics.SDF;
 import static graphics.SDF.cylinder;
 import static graphics.SDF.halfSpace;
@@ -24,7 +24,7 @@ import graphics.Window;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import org.joml.Vector4d;
+import java.util.function.Supplier;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
@@ -59,45 +59,20 @@ public class Main {
             moveCamera();
         });
 
-        World w = new World();
+        World world = new World();
 
-        AssimpModel m = AssimpModel.load("Cerberus.fbx");
-        PBRTexture t = PBRTexture.loadFromFolder("Cerberus", "tga");
-        Renderable cerberus = Renderable.create(
-                () -> {
-                    Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
-                    SHADER_PBR.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
-                    t.bind();
-                },
-                () -> Transformation.create(camera3d.position.add(camera3d.facing().mul(2)),
-                        Quaternion.fromEulerAngles(camera3d.horAngle, camera3d.vertAngle, 0), .01),
-                () -> m.render()
-        );
+        AssimpModel gunModel = AssimpModel.load("Cerberus.fbx");
+        PBRTexture gunTexture = PBRTexture.loadFromFolder("Cerberus", "tga");
+        Supplier<Transformation> gunPos = () -> Transformation.create(camera3d.position.add(camera3d.facing().mul(2)),
+                Quaternion.fromEulerAngles(camera3d.horAngle, camera3d.vertAngle, 0), .01);
+        Renderable gun = new RenderablePBR(gunModel, gunTexture, gunPos);
 
-        SurfaceNet sn = new SurfaceNet(1);
-//        Texture ice = Texture.load("ice_blue.png");
-//        Renderable icePath = Renderable.create(
-//                () -> {
-//                    SHADER_DIFFUSE.setUniform("metallic", 0f);
-//                    SHADER_DIFFUSE.setUniform("roughness", .2f);
-//                    ice.bind();
-//                },
-//                () -> Transformation.IDENTITY,
-//                () -> sn.render()
-//        );
-        PBRTexture ice = PBRTexture.loadFromFolder("ice");
-        Renderable icePath = Renderable.create(
-                () -> {
-                    Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
-                    SHADER_PBR.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
-                    ice.bind();
-                },
-                () -> Transformation.IDENTITY,
-                () -> sn.render()
-        );
-        icePathControls(sn);
+        SurfaceNet iceModel = new SurfaceNet(1);
+        PBRTexture iceTexture = PBRTexture.loadFromFolder("ice");
+        Renderable ice = new RenderablePBR(iceModel, iceTexture, () -> Transformation.IDENTITY);
+        icePathControls(iceModel);
 
-        List<Renderable> renderTask = Arrays.asList(w, cerberus, icePath);
+        List<Renderable> renderTask = Arrays.asList(world, gun, ice);
         renderPipeline(renderTask);
 
         Core.run();
@@ -160,7 +135,7 @@ public class Main {
 
     public static void renderPipeline(List<Renderable> renderTask) {
         Color clearColor = new Color(.4, .7, 1, 1);
-        Vec3d sunColor = new Vec3d(10, 9, 8).mul(.5);
+        Vec3d sunColor = new Vec3d(10, 9, 8).mul(.3);
         Vec3d sunDirection = new Vec3d(.4, -.2, 1);
 
         GeometryPass gp = new GeometryPass();
