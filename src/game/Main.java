@@ -17,7 +17,7 @@ import graphics.Renderable;
 import graphics.SDF;
 import static graphics.SDF.cylinder;
 import static graphics.SDF.halfSpace;
-import static graphics.SDF.intersection;
+import static graphics.SDF.intersectionSmooth;
 import graphics.ShadowPass;
 import graphics.SurfaceNet;
 import graphics.Window;
@@ -32,7 +32,9 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
+import physics.AABB;
 import util.Mutable;
 import static util.math.MathUtils.clamp;
 import util.math.Quaternion;
@@ -72,7 +74,7 @@ public class Main {
                 () -> m.render()
         );
 
-        SurfaceNet sn = new SurfaceNet(.5);
+        SurfaceNet sn = new SurfaceNet(1);
 //        Texture ice = Texture.load("ice_blue.png");
 //        Renderable icePath = Renderable.create(
 //                () -> {
@@ -108,16 +110,24 @@ public class Main {
                 fly.o = !fly.o;
             }
             if (fly.o) {
-                camera3d.position = camera3d.position.add(camera3d.facing().setLength(dt() * 10));
+                camera3d.position = camera3d.position.add(camera3d.facing().setLength(dt() * 20));
 
                 Vec3d side = camera3d.facing().cross(camera3d.up);
                 Vec3d normal = camera3d.facing().cross(side).normalize();
-                Vec3d pos = camera3d.position.add(normal.mul(2));
+                Vec3d pos1 = camera3d.position.add(normal.mul(2));
+                Vec3d pos2 = pos1.add(camera3d.facing().mul(3));
 
-                SDF shape = intersection(cylinder(pos, camera3d.facing(), 3, 4), cylinder(pos.add(normal.mul(2)), camera3d.facing(), 3, 4), halfSpace(pos, normal), halfSpace(pos, camera3d.facing()));
-                sn.unionSDF(shape, pos, 5);
-//                SDF shape2 = intersection(cylinder(pos, camera3d.facing(), 3, 4), cylinder(pos.add(normal.mul(-2)), camera3d.facing(), 3, 4), halfSpace(pos, normal.mul(-1)), halfSpace(pos, camera3d.facing())).invert();
-//                sn.intersectionSDF(shape2, pos, 5);
+                SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, normal), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
+                AABB bounds = AABB.boundingBox(Arrays.asList(pos1.sub(3), pos1.add(3), pos2.sub(3), pos2.add(3)));
+                sn.unionSDF(shape, bounds);
+            }
+
+            if (Input.keyJustPressed(GLFW_KEY_T)) {
+                Vec3d pos1 = camera3d.position.add(camera3d.facing().mul(3));
+                Vec3d pos2 = pos1.add(camera3d.facing().mul(30));
+                SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
+                AABB bounds = AABB.boundingBox(Arrays.asList(pos1.sub(3), pos1.add(3), pos2.sub(3), pos2.add(3)));
+                sn.unionSDF(shape, bounds);
             }
         });
     }

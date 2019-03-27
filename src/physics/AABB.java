@@ -29,6 +29,10 @@ public class AABB {
                 && lower.z < point.z && point.z < upper.z;
     }
 
+    public AABB expand(double amt) {
+        return new AABB(lower.sub(amt), upper.add(amt));
+    }
+
     public boolean intersects(AABB other) {
         return lower.x < other.upper.x && other.lower.x < upper.x
                 && lower.y < other.upper.y && other.lower.y < upper.y

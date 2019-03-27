@@ -1,6 +1,5 @@
 package graphics;
 
-import java.util.stream.Stream;
 import util.math.Vec3d;
 
 public interface SDF {
@@ -22,7 +21,25 @@ public interface SDF {
     }
 
     public static SDF intersection(SDF... a) {
-        return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).min().getAsDouble();
+        return v -> {
+            double d = Double.MAX_VALUE;
+            for (SDF s : a) {
+                d = Math.min(d, s.value(v));
+            }
+            return d;
+        };
+//        return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).min().getAsDouble();
+    }
+
+    public static SDF intersectionSmooth(double k, SDF... a) {
+        return v -> {
+            double d = 0;
+            for (SDF s : a) {
+                d += Math.exp(-k * s.value(v));
+            }
+            return -Math.log(d) / k;
+        };
+        //return v -> -1 / k * Math.log(Stream.of(a).mapToDouble(sdf -> Math.exp(-k * sdf.value(v))).sum());
     }
 
     public default SDF invert() {
@@ -42,6 +59,13 @@ public interface SDF {
     }
 
     public static SDF union(SDF... a) {
-        return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).max().getAsDouble();
+        return v -> {
+            double d = Double.MIN_VALUE;
+            for (SDF s : a) {
+                d = Math.max(d, s.value(v));
+            }
+            return d;
+        };
+        // return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).max().getAsDouble();
     }
 }

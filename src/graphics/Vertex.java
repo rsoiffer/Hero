@@ -5,6 +5,7 @@ import graphics.opengl.VertexArrayObject;
 import java.util.List;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL15C.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15C.GL_STREAM_DRAW;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import util.math.Vec2d;
@@ -67,7 +68,7 @@ public class Vertex {
         for (int i = 0; i < vertices.size(); i++) {
             System.arraycopy(vertices.get(i).data(), 0, data, 14 * i, 14);
         }
-        vbo.putData(data);
+        vbo.putData(data, GL_STREAM_DRAW);
     }
 
     @Override
