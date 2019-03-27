@@ -17,11 +17,10 @@ import static org.lwjgl.opengl.GL11C.glBindTexture;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import util.math.Vec3d;
-import util.math.Vec4d;
 
 public class LightingPass extends Behavior {
 
-    public Vec4d clearColor;
+    public Color clearColor;
     public GeometryPass gp;
     public List<ShadowPass> spList;
     public Vec3d sunColor, sunDirection;

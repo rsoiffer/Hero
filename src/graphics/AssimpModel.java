@@ -1,7 +1,6 @@
 package graphics;
 
 import graphics.opengl.BufferObject;
-import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ import static org.lwjgl.opengl.GL15C.GL_ELEMENT_ARRAY_BUFFER;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class AssimpModel {
+public class AssimpModel implements Model {
 
     private final int num;
     private final VertexArrayObject vao;
@@ -69,8 +68,9 @@ public class AssimpModel {
         return m;
     }
 
-    public void draw(PBRTexture tex) {
-        bindAll(vao, tex);
+    @Override
+    public void render() {
+        vao.bind();
         glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
     }
 

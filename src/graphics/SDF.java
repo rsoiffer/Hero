@@ -29,6 +29,10 @@ public interface SDF {
         return v -> -value(v);
     }
 
+    public default SDF scale(double scale) {
+        return v -> scale * value(v.mul(scale));
+    }
+
     public static SDF sphere(Vec3d pos, double size) {
         return v -> size - v.sub(pos).length();
     }

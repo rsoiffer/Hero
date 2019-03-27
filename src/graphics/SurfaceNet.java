@@ -3,6 +3,7 @@ package graphics;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import static util.math.MathUtils.ceil;
@@ -11,12 +12,17 @@ import static util.math.MathUtils.floor;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class SurfaceNet {
+public class SurfaceNet implements Model {
 
-    private static final double MIN = -2, BOUNDARY = 0, MAX = Double.MAX_VALUE;
+    private static final double MIN = -2, BOUNDARY = 0, MAX = 2;
     private static final int SUBNET_SIZE = 32;
 
+    private final double scale;
     private final HashMap<Vec3d, Subnet> subnets = new HashMap();
+
+    public SurfaceNet(double scale) {
+        this.scale = scale;
+    }
 
     public void addToAll(double amt) {
         for (Subnet s : subnets.values()) {
@@ -27,17 +33,7 @@ public class SurfaceNet {
         }
     }
 
-    public void draw() {
-        for (Subnet s : subnets.values()) {
-            if (s.changed) {
-                s.updateModel();
-                s.changed = false;
-            }
-            s.model.draw();
-        }
-    }
-
-    public double get(int x, int y, int z) {
+    private double get(int x, int y, int z) {
         Vec3d v = new Vec3d(x, y, z);
         Subnet s = subnets.get(v.div(SUBNET_SIZE).floor());
         return s == null ? MIN : s.data.getOrDefault(v, MIN);
@@ -56,16 +52,33 @@ public class SurfaceNet {
     }
 
     public void intersectionSDF(SDF sdf, Vec3d lower, Vec3d upper) {
+        sdf = sdf.scale(scale);
+        lower = lower.div(scale);
+        upper = upper.div(scale);
         for (int x = floor(lower.x); x <= ceil(upper.x); x++) {
             for (int y = floor(lower.y); y <= ceil(upper.y); y++) {
                 for (int z = floor(lower.z); z <= ceil(upper.z); z++) {
-                    set(x, y, z, Math.min(get(x, y, z), sdf.value(new Vec3d(x, y, z))));
+                    double d = sdf.value(new Vec3d(x, y, z));
+                    if (d < MAX) {
+                        set(x, y, z, Math.max(get(x, y, z), d));
+                    }
                 }
             }
         }
     }
 
-    public void set(int x, int y, int z, double d) {
+    @Override
+    public void render() {
+        for (Subnet s : subnets.values()) {
+            if (s.changed) {
+                s.updateModel();
+                s.changed = false;
+            }
+            s.model.render();
+        }
+    }
+
+    private void set(int x, int y, int z, double d) {
         d = clamp(d, MIN, MAX);
         if (d != get(x, y, z)) {
             Vec3d v = new Vec3d(x, y, z);
@@ -91,10 +104,16 @@ public class SurfaceNet {
     }
 
     public void unionSDF(SDF sdf, Vec3d lower, Vec3d upper) {
+        sdf = sdf.scale(scale);
+        lower = lower.div(scale);
+        upper = upper.div(scale);
         for (int x = floor(lower.x); x <= ceil(upper.x); x++) {
             for (int y = floor(lower.y); y <= ceil(upper.y); y++) {
                 for (int z = floor(lower.z); z <= ceil(upper.z); z++) {
-                    set(x, y, z, Math.max(get(x, y, z), sdf.value(new Vec3d(x, y, z))));
+                    double d = sdf.value(new Vec3d(x, y, z));
+                    if (d > MIN) {
+                        set(x, y, z, Math.max(get(x, y, z), d));
+                    }
                 }
             }
         }
@@ -102,10 +121,10 @@ public class SurfaceNet {
 
     private class Edge {
 
-        public final int x0, y0, z0, x1, y1, z1;
-        public final double d0, d1;
+        private final int x0, y0, z0, x1, y1, z1;
+        private final double d0, d1;
 
-        public Edge(int x0, int y0, int z0, int x1, int y1, int z1) {
+        private Edge(int x0, int y0, int z0, int x1, int y1, int z1) {
             this.x0 = x0;
             this.y0 = y0;
             this.z0 = z0;
@@ -116,12 +135,23 @@ public class SurfaceNet {
             d1 = get(x1, y1, z1);
         }
 
-        public Vec3d crossing() {
+        private Edge(int x0, int y0, int z0, int x1, int y1, int z1, double d0) {
+            this.x0 = x0;
+            this.y0 = y0;
+            this.z0 = z0;
+            this.x1 = x1;
+            this.y1 = y1;
+            this.z1 = z1;
+            this.d0 = d0;
+            d1 = get(x1, y1, z1);
+        }
+
+        private Vec3d crossing() {
             double c = (BOUNDARY - d0) / (d1 - d0);
             return new Vec3d(x0, y0, z0).lerp(new Vec3d(x1, y1, z1), c);
         }
 
-        public List<Vec3d> neighbors() {
+        private List<Vec3d> neighbors() {
             List<Vec3d> r = new LinkedList();
             for (int x = x1 - 1; x <= x0; x++) {
                 for (int y = y1 - 1; y <= y0; y++) {
@@ -133,7 +163,7 @@ public class SurfaceNet {
             return r;
         }
 
-        public boolean surface() {
+        private boolean surface() {
             return d0 > BOUNDARY != d1 > BOUNDARY;
         }
 
@@ -149,26 +179,29 @@ public class SurfaceNet {
         private final CustomModel model = new CustomModel();
         private boolean changed;
 
-        public Subnet() {
+        private Subnet() {
             model.createVAO();
         }
 
         private List<Edge> computeEdges() {
             List<Edge> edges = new LinkedList();
-            for (Vec3d v : data.keySet()) {
-                int x = (int) v.x, y = (int) v.y, z = (int) v.z;
-                edges.add(new Edge(x, y, z, x + 1, y, z));
-                edges.add(new Edge(x, y, z, x, y + 1, z));
-                edges.add(new Edge(x, y, z, x, y, z + 1));
-                if (get(x - 1, y, z) == MIN) {
-                    edges.add(new Edge(x - 1, y, z, x, y, z));
+            for (Entry<Vec3d, Double> e : data.entrySet()) {
+                if (Math.abs(e.getValue()) > 1) {
+                    continue;
                 }
-                if (get(x, y - 1, z) == MIN) {
-                    edges.add(new Edge(x, y - 1, z, x, y, z));
-                }
-                if (get(x, y, z - 1) == MIN) {
-                    edges.add(new Edge(x, y, z - 1, x, y, z));
-                }
+                int x = (int) e.getKey().x, y = (int) e.getKey().y, z = (int) e.getKey().z;
+                edges.add(new Edge(x, y, z, x + 1, y, z, e.getValue()));
+                edges.add(new Edge(x, y, z, x, y + 1, z, e.getValue()));
+                edges.add(new Edge(x, y, z, x, y, z + 1, e.getValue()));
+//                if (get(x - 1, y, z) == MIN) {
+//                    edges.add(new Edge(x - 1, y, z, x, y, z));
+//                }
+//                if (get(x, y - 1, z) == MIN) {
+//                    edges.add(new Edge(x, y - 1, z, x, y, z));
+//                }
+//                if (get(x, y, z - 1) == MIN) {
+//                    edges.add(new Edge(x, y, z - 1, x, y, z));
+//                }
             }
             edges.removeIf(e -> !e.surface());
             return edges;
@@ -187,9 +220,10 @@ public class SurfaceNet {
             edges.removeIf(e -> !e.surface());
             Vec3d p = edges.stream().map(Edge::crossing).reduce(new Vec3d(0, 0, 0), Vec3d::add);
             return p.div(edges.size());
+//            return v.add(.5);
         }
 
-        public void updateModel() {
+        private void updateModel() {
             List<Edge> edges = computeEdges();
             Set<Vec3d> allPoints = edges.stream().flatMap(e -> e.neighbors().stream()).collect(Collectors.toSet());
             HashMap<Vec3d, Vec3d> points = new HashMap();
@@ -199,7 +233,8 @@ public class SurfaceNet {
 
             model.clear();
             for (Edge e : edges) {
-                List<Vec3d> p = e.neighbors().stream().map(v -> points.get(v)).collect(Collectors.toList());
+                List<Vec3d> p = e.neighbors().stream().map(v -> points.get(v))
+                        .map(v -> v.mul(scale)).collect(Collectors.toList());
                 if (e.y0 == e.y1 != e.d0 > BOUNDARY) {
                     model.addTriangle(p.get(0), new Vec2d(0, 0), p.get(1), new Vec2d(1, 0), p.get(2), new Vec2d(0, 1));
                     model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(2), new Vec2d(0, 1), p.get(1), new Vec2d(1, 0));

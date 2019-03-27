@@ -2,6 +2,7 @@ package graphics;
 
 import graphics.opengl.BufferObject;
 import static graphics.opengl.GLObject.bindAll;
+import graphics.opengl.Shader;
 import graphics.opengl.Texture;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
@@ -20,18 +21,24 @@ import org.lwjgl.openvr.VR;
 import org.lwjgl.openvr.VRRenderModels;
 import org.lwjgl.system.MemoryStack;
 import static org.lwjgl.system.MemoryStack.stackPush;
+import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
 import vr.ViveInput.ViveController;
 
-public class OpenVRModel {
+public class OpenVRModel implements Renderable {
 
+    private static final Shader DIFFUSE_SHADER = Shader.load("geometry_pass_diffuse");
+
+    private final ViveController vc;
     private final int num;
     private final VertexArrayObject vao;
     private final BufferObject ebo;
     private final Texture diffuseTexture;
 
     public OpenVRModel(ViveController vc) {
+        this.vc = vc;
+
         List<Vertex> vertices = new ArrayList();
         List<Integer> indices = new ArrayList();
 
@@ -74,8 +81,19 @@ public class OpenVRModel {
         diffuseTexture.uploadData(rmtm.unWidth(), rmtm.unHeight(), rmtm.rubTextureMapData(4 * rmtm.unWidth() * rmtm.unHeight()));
     }
 
+    @Override
+    public void bindGeomShader() {
+        bindAll(DIFFUSE_SHADER, diffuseTexture);
+    }
+
+    @Override
+    public Transformation getTransform() {
+        return new Transformation(vc.pose());
+    }
+
+    @Override
     public void render() {
-        bindAll(vao, PBRTexture.DEFAULT, diffuseTexture);
+        vao.bind();
         glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
     }
 

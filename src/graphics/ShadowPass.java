@@ -9,7 +9,6 @@ import graphics.opengl.Shader;
 import graphics.opengl.Texture;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 import org.joml.Matrix4d;
 import org.joml.Vector3d;
 import org.joml.Vector4d;
@@ -39,7 +38,7 @@ import util.math.Vec3d;
 
 public class ShadowPass extends Behavior {
 
-    public Consumer<Boolean> renderTask;
+    public List<Renderable> renderTask;
     public double zMin = -1, zMax = 1;
     public Vec3d sunDirection;
 
@@ -110,7 +109,9 @@ public class ShadowPass extends Behavior {
         glEnable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT);
-        renderTask.accept(false);
+        for (Renderable r : renderTask) {
+            r.renderTransformed();
+        }
         glCullFace(GL_BACK);
         GLState.bindFramebuffer(null);
         Camera.current = Camera.camera3d;

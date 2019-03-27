@@ -1,19 +1,23 @@
 package game;
 
-import engine.Behavior;
+import graphics.Camera;
 import graphics.CustomModel;
+import static graphics.GeometryPass.SHADER_PBR;
 import graphics.PBRTexture;
+import graphics.Renderable;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.joml.Vector4d;
 import physics.AABB;
 import util.Noise;
 import static util.math.MathUtils.floor;
+import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class World extends Behavior {
+public class World implements Renderable {
 
     public static final double FLOOR_HEIGHT = 4;
     public static final double BUILDING_SIZE = 32;
@@ -44,8 +48,7 @@ public class World extends Behavior {
     private CustomModel ground, roofs;
     private CustomModel[] walls = new CustomModel[SPRITES.length];
 
-    @Override
-    public void createInner() {
+    public World() {
         for (int i = 0; i < 2000; i += 2 * BUILDING_SIZE + STREET_WIDTH) {
             for (int j = 0; j < 2000; j += 8 * BUILDING_SIZE + STREET_WIDTH) {
                 for (int k = 0; k < 200; k++) {
@@ -100,14 +103,26 @@ public class World extends Behavior {
         }
     }
 
+    @Override
+    public void bindGeomShader() {
+        Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
+        SHADER_PBR.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
+    }
+
+    @Override
+    public Transformation getTransform() {
+        return Transformation.IDENTITY;
+    }
+
+    @Override
     public void render() {
         sidewalk.bind();
-        ground.draw();
+        ground.render();
         concreteFloor.bind();
-        roofs.draw();
+        roofs.render();
         for (int i = 0; i < walls.length; i++) {
             PBR_SPRITES[i].bind();
-            walls[i].draw();
+            walls[i].render();
         }
     }
 }

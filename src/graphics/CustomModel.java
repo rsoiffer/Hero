@@ -1,7 +1,6 @@
 package graphics;
 
 import graphics.opengl.BufferObject;
-import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +11,7 @@ import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class CustomModel {
+public class CustomModel implements Model {
 
     private final List<Vertex> vertices = new ArrayList();
     private int numVertices;
@@ -47,8 +46,9 @@ public class CustomModel {
         vao = Vertex.createVAO(vbo);
     }
 
-    public void draw() {
-        bindAll(vao);
+    @Override
+    public void render() {
+        vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, numVertices);
     }
 

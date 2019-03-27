@@ -62,7 +62,7 @@ public class MainVR {
         });
 
         World w = new World();
-        w.create();
+        // w.create();
 
         Player p = new Player();
         p.position.position = new Vec3d(10, 10, 10);

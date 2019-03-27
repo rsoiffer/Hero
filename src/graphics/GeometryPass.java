@@ -9,8 +9,7 @@ import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
-import java.util.function.Consumer;
-import org.joml.Vector4d;
+import java.util.List;
 import static org.lwjgl.opengl.GL11C.GL_BLEND;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
@@ -26,14 +25,23 @@ import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT2;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT3;
 import static org.lwjgl.opengl.GL30.GL_RGB16F;
 import static org.lwjgl.opengl.GL30.GL_RGB32F;
-import util.math.Transformation;
-import util.math.Vec3d;
 
 public class GeometryPass extends Behavior {
 
-    public Consumer<Boolean> renderTask;
+    public static final Shader SHADER_DIFFUSE = Shader.load("geometry_pass_diffuse");
+    public static final Shader SHADER_PBR = Shader.load("geometry_pass_pbr");
 
-    private Shader shader;
+    static {
+        SHADER_PBR.setUniform("albedoMap", 0);
+        SHADER_PBR.setUniform("normalMap", 1);
+        SHADER_PBR.setUniform("metallicMap", 2);
+        SHADER_PBR.setUniform("roughnessMap", 3);
+        SHADER_PBR.setUniform("aoMap", 4);
+        SHADER_PBR.setUniform("heightMap", 5);
+    }
+
+    public List<Renderable> renderTask;
+
     private Framebuffer gBuffer;
     private Texture gPosition, gNormal, gAlbedo, gMRA;
 
@@ -43,14 +51,6 @@ public class GeometryPass extends Behavior {
 
     @Override
     public void createInner() {
-        shader = Shader.load("geometry_pass_pbr");
-        shader.setUniform("albedoMap", 0);
-        shader.setUniform("normalMap", 1);
-        shader.setUniform("metallicMap", 2);
-        shader.setUniform("roughnessMap", 3);
-        shader.setUniform("aoMap", 4);
-        shader.setUniform("heightMap", 5);
-
         gBuffer = new Framebuffer();
         gBuffer.bind();
         gPosition = gBuffer.attachTexture(GL_RGB32F, GL_RGB, GL_FLOAT, GL_NEAREST, GL_COLOR_ATTACHMENT0);
@@ -77,10 +77,14 @@ public class GeometryPass extends Behavior {
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         gBuffer.clear(BLACK);
-        shader.setMVP(Transformation.IDENTITY);
-        Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
-        shader.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
-        renderTask.accept(true);
+//        shader.setMVP(Transformation.IDENTITY);
+//        Vector4d v = new Vector4d(0, 0, 0, 1).mul(Camera.current.viewMatrix().invert());
+//        shader.setUniform("camPos", new Vec3d(v.x, v.y, v.z));
+//        renderTask.accept(true);
+        for (Renderable r : renderTask) {
+            r.bindGeomShader();
+            r.renderTransformed();
+        }
         GLState.bindFramebuffer(null);
     }
 }
