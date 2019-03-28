@@ -1,9 +1,11 @@
 package game;
 
 import graphics.CustomModel;
-import static graphics.GeometryPass.SHADER_PBR;
+import static graphics.passes.GeometryPass.SHADER_DIFFUSE;
+import static graphics.passes.GeometryPass.SHADER_PBR;
 import graphics.PBRTexture;
 import graphics.Renderable;
+import graphics.opengl.Texture;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +23,14 @@ public class World implements Renderable {
     public static final double BUILDING_SIZE = 32;
     public static final double STREET_WIDTH = 20;
 
-    private static final String[] SPRITES = {"tower.png", "glass_0.png", "glass_1.png",
+    private static final String[] WALL_FILES = {"tower.png", "glass_0.png", "glass_1.png",
         "highrise_0.png", "highrise_1.png", "highrise_2.png", "highrise_3.png", "highrise_4.png"};
-    private static final double[] SCALES = {2, 9, 3, 8, 4, 3, 3, 4};
-    private static final PBRTexture[] PBR_SPRITES = new PBRTexture[SPRITES.length];
+    private static final double[] WALL_SCALES = {2, 9, 3, 8, 4, 3, 3, 4};
+    private static final Texture[] WALL_TEXTURES = new Texture[WALL_FILES.length];
 
     static {
-        for (int i = 0; i < SPRITES.length; i++) {
-            PBR_SPRITES[i] = PBRTexture.loadAlbedo(SPRITES[i]);
+        for (int i = 0; i < WALL_FILES.length; i++) {
+            WALL_TEXTURES[i] = Texture.load(WALL_FILES[i]);
         }
     }
     private static final PBRTexture brick = PBRTexture.loadFromFolder("brick");
@@ -44,7 +46,7 @@ public class World implements Renderable {
     private Noise colorNoise = new Noise(new Random());
     private Noise heightNoise = new Noise(new Random());
     private CustomModel ground, roofs;
-    private CustomModel[] walls = new CustomModel[SPRITES.length];
+    private CustomModel[] walls = new CustomModel[WALL_FILES.length];
 
     public World() {
         for (int i = 0; i < 2000; i += 2 * BUILDING_SIZE + STREET_WIDTH) {
@@ -91,8 +93,8 @@ public class World implements Renderable {
                 Vec3d dir2 = DIRS.get(j < 2 ? j + 2 : 3 - j).mul(b.size());
                 Vec3d dir3 = DIRS.get(5).mul(b.size());
                 Vec3d v = b.lower.add(b.size().div(2)).add(dir.div(2)).sub(dir2.div(2)).sub(dir3.div(2));
-                float texW = (float) Math.abs(dir2.x + dir2.y + dir2.z) / (float) (FLOOR_HEIGHT * SCALES[i]);
-                float texH = (float) Math.abs(dir3.x + dir3.y + dir3.z) / (float) (FLOOR_HEIGHT * SCALES[i]);
+                float texW = (float) Math.abs(dir2.x + dir2.y + dir2.z) / (float) (FLOOR_HEIGHT * WALL_SCALES[i]);
+                float texH = (float) Math.abs(dir3.x + dir3.y + dir3.z) / (float) (FLOOR_HEIGHT * WALL_SCALES[i]);
                 walls[i].addRectangle(v, dir2, dir3, new Vec2d(0, 0), new Vec2d(texW, 0), new Vec2d(0, texH));
             }
         }
@@ -109,8 +111,12 @@ public class World implements Renderable {
         ground.render();
         concreteFloor.bind();
         roofs.render();
+        SHADER_DIFFUSE.bind();
+        SHADER_DIFFUSE.setUniform("metallic", 0.0f);
+        SHADER_DIFFUSE.setUniform("roughness", 0.8f);
+        setTransform(Transformation.IDENTITY);
         for (int i = 0; i < walls.length; i++) {
-            PBR_SPRITES[i].bind();
+            WALL_TEXTURES[i].bind();
             walls[i].render();
         }
     }

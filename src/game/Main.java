@@ -8,9 +8,6 @@ import static engine.Layer.UPDATE;
 import graphics.AssimpModel;
 import graphics.Camera;
 import static graphics.Camera.camera3d;
-import graphics.Color;
-import graphics.GeometryPass;
-import graphics.LightingPass;
 import graphics.PBRTexture;
 import graphics.Renderable;
 import graphics.Renderable.RenderablePBR;
@@ -18,11 +15,10 @@ import graphics.SDF;
 import static graphics.SDF.cylinder;
 import static graphics.SDF.halfSpace;
 import static graphics.SDF.intersectionSmooth;
-import graphics.ShadowPass;
 import graphics.SurfaceNet;
 import graphics.Window;
+import graphics.passes.RenderPipeline;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
@@ -67,18 +63,21 @@ public class Main {
                 Quaternion.fromEulerAngles(camera3d.horAngle, camera3d.vertAngle, 0), .01);
         Renderable gun = new RenderablePBR(gunModel, gunTexture, gunPos);
 
-        SurfaceNet iceModel = new SurfaceNet(1);
-        PBRTexture iceTexture = PBRTexture.loadFromFolder("ice");
+        SurfaceNet iceModel = new SurfaceNet(.5);
+        PBRTexture iceTexture = PBRTexture.loadFromFolder("ice2");
         Renderable ice = new RenderablePBR(iceModel, iceTexture, () -> Transformation.IDENTITY);
         icePathControls(iceModel);
 
         List<Renderable> renderTask = Arrays.asList(world, gun, ice);
-        renderPipeline(renderTask);
+
+        RenderPipeline rp = new RenderPipeline();
+        rp.renderTask = renderTask;
+        rp.create();
 
         Core.run();
     }
 
-    public static void icePathControls(SurfaceNet sn) {
+    public static void icePathControls(SurfaceNet iceModel) {
         Mutable<Boolean> fly = new Mutable(false);
         UPDATE.onStep(() -> {
             if (Input.keyJustPressed(GLFW_KEY_R)) {
@@ -92,9 +91,16 @@ public class Main {
                 Vec3d pos1 = camera3d.position.add(normal.mul(2));
                 Vec3d pos2 = pos1.add(camera3d.facing().mul(3));
 
-                SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, normal), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
+                // SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, normal), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
+                SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, normal), halfSpace(pos1.add(normal.mul(1.5)), normal.mul(-1)), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
                 AABB bounds = AABB.boundingBox(Arrays.asList(pos1.sub(3), pos1.add(3), pos2.sub(3), pos2.add(3)));
-                sn.unionSDF(shape, bounds);
+                iceModel.unionSDF(shape, bounds);
+
+//                if (Math.random() < dt()) {
+//                    SDF shape2 = intersectionSmooth(3, cylinder(pos1, new Vec3d(0, 0, 1), 1), halfSpace(pos1, new Vec3d(0, 0, -1)), halfSpace(pos1.add(new Vec3d(0, 0, -20)), new Vec3d(0, 0, 1)));
+//                    AABB bounds2 = AABB.boundingBox(Arrays.asList(pos1.sub(3), pos1.add(3), pos1.add(new Vec3d(0, 0, -20)).sub(3), pos1.add(new Vec3d(0, 0, -20)).add(3)));
+//                    iceModel.unionSDF(shape2, bounds2);
+//                }
             }
 
             if (Input.keyJustPressed(GLFW_KEY_T)) {
@@ -102,7 +108,7 @@ public class Main {
                 Vec3d pos2 = pos1.add(camera3d.facing().mul(30));
                 SDF shape = intersectionSmooth(3, cylinder(pos1, camera3d.facing(), 3), halfSpace(pos1, camera3d.facing()), halfSpace(pos2, camera3d.facing().mul(-1)));
                 AABB bounds = AABB.boundingBox(Arrays.asList(pos1.sub(3), pos1.add(3), pos2.sub(3), pos2.add(3)));
-                sn.unionSDF(shape, bounds);
+                iceModel.unionSDF(shape, bounds);
             }
         });
     }
@@ -131,34 +137,5 @@ public class Main {
         if (Input.keyDown(GLFW_KEY_LEFT_SHIFT)) {
             camera3d.position = camera3d.position.add(camera3d.up.setLength(-dt() * flySpeed));
         }
-    }
-
-    public static void renderPipeline(List<Renderable> renderTask) {
-        Color clearColor = new Color(.4, .7, 1, 1);
-        Vec3d sunColor = new Vec3d(10, 9, 8).mul(.3);
-        Vec3d sunDirection = new Vec3d(.4, -.2, 1);
-
-        GeometryPass gp = new GeometryPass();
-        gp.renderTask = renderTask;
-        gp.create();
-
-        List<ShadowPass> spList = new LinkedList();
-        for (int i = 0; i < 5; i++) {
-            ShadowPass sp = new ShadowPass();
-            sp.renderTask = renderTask;
-            sp.zMin = i == 0 ? -1 : (1 - Math.pow(.3, i + 2));
-            sp.zMax = 1 - Math.pow(.3, i + 3);
-            sp.sunDirection = sunDirection;
-            sp.create();
-            spList.add(sp);
-        }
-
-        LightingPass lp = new LightingPass();
-        lp.clearColor = clearColor;
-        lp.gp = gp;
-        lp.spList = spList;
-        lp.sunColor = sunColor;
-        lp.sunDirection = sunDirection;
-        lp.create();
     }
 }

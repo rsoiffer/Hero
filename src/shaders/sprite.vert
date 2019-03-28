@@ -1,14 +1,15 @@
 #version 330
 
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoords;
 
-layout (location=0) in vec3 position_in;
-layout (location=1) in vec2 texCoord_in;
+out vec2 TexCoords;
 
-out vec2 texCoord;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position_in, 1.0);
-    texCoord = texCoord_in;
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    TexCoords = aTexCoords;
 }

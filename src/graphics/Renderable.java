@@ -1,6 +1,6 @@
 package graphics;
 
-import static graphics.GeometryPass.SHADER_PBR;
+import static graphics.passes.GeometryPass.SHADER_PBR;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import java.util.function.Supplier;

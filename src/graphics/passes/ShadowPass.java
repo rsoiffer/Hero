@@ -1,8 +1,7 @@
-package graphics;
+package graphics.passes;
 
-import engine.Behavior;
-import engine.Layer;
-import static engine.Layer.POSTUPDATE;
+import graphics.Camera;
+import graphics.Renderable;
 import graphics.opengl.Framebuffer;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
@@ -25,7 +24,6 @@ import static org.lwjgl.opengl.GL11C.GL_TEXTURE_WRAP_T;
 import static org.lwjgl.opengl.GL11C.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11C.glClear;
 import static org.lwjgl.opengl.GL11C.glCullFace;
-import static org.lwjgl.opengl.GL11C.glEnable;
 import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
 import static org.lwjgl.opengl.GL14.GL_DEPTH_COMPONENT32;
 import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_FUNC;
@@ -36,27 +34,20 @@ import physics.AABB;
 import util.math.Transformation;
 import util.math.Vec3d;
 
-public class ShadowPass extends Behavior {
+public class ShadowPass implements Runnable {
+
+    private static final Shader SHADER_SHADOW = Shader.load("shadow_pass");
 
     public List<Renderable> renderTask;
+    public List<Camera> cameras;
     public double zMin = -1, zMax = 1;
     public Vec3d sunDirection;
 
-    private Shader shader;
-    private Framebuffer shadowMap;
-    private Texture shadowTexture;
-    private Camera sunCam;
+    private final Framebuffer shadowMap;
+    private final Texture shadowTexture;
+    private final Camera sunCam;
 
-    public void bindShadowMap(int num) {
-        shadowTexture.num = num;
-        shadowTexture.bind();
-        shadowTexture.setParameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-        shadowTexture.setParameter(GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
-    }
-
-    @Override
-    public void createInner() {
-        shader = Shader.load("shadow_pass");
+    public ShadowPass() {
         shadowMap = new Framebuffer(4096, 4096);
         shadowTexture = shadowMap.attachTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, GL_LINEAR, GL_DEPTH_ATTACHMENT);
         sunCam = new Camera() {
@@ -76,17 +67,26 @@ public class ShadowPass extends Behavior {
         shadowTexture.setParameter(GL_TEXTURE_BORDER_COLOR, new float[]{1, 1, 1, 1});
     }
 
+    public void bindShadowMap(int num) {
+        shadowTexture.num = num;
+        shadowTexture.bind();
+        shadowTexture.setParameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+        shadowTexture.setParameter(GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
+    }
+
     private AABB frustumAABB(double zMin, double zMax, Matrix4d sunView) {
-        Matrix4d m = Camera.camera3d.projectionMatrix().mul(Camera.camera3d.viewMatrix());
-        m.invert();
-        m = sunView.mul(m, new Matrix4d());
         List<Vec3d> points = new LinkedList();
-        for (int x = -1; x <= 1; x += 2) {
-            for (int y = -1; y <= 1; y += 2) {
-                Vector4d v = new Vector4d(x, y, zMin, 1).mul(m);
-                points.add(new Vec3d(v.x / v.w, v.y / v.w, v.z / v.w));
-                v = new Vector4d(x, y, zMax, 1).mul(m);
-                points.add(new Vec3d(v.x / v.w, v.y / v.w, v.z / v.w));
+        for (Camera c : cameras) {
+            Matrix4d m = c.projectionMatrix().mul(c.viewMatrix());
+            m.invert();
+            m = sunView.mul(m, new Matrix4d());
+            for (int x = -1; x <= 1; x += 2) {
+                for (int y = -1; y <= 1; y += 2) {
+                    Vector4d v = new Vector4d(x, y, zMin, 1).mul(m);
+                    points.add(new Vec3d(v.x / v.w, v.y / v.w, v.z / v.w));
+                    v = new Vector4d(x, y, zMax, 1).mul(m);
+                    points.add(new Vec3d(v.x / v.w, v.y / v.w, v.z / v.w));
+                }
             }
         }
         return AABB.boundingBox(points);
@@ -97,16 +97,11 @@ public class ShadowPass extends Behavior {
     }
 
     @Override
-    public Layer layer() {
-        return POSTUPDATE;
-    }
-
-    @Override
-    public void step() {
+    public void run() {
         Camera.current = sunCam;
-        shader.setMVP(Transformation.IDENTITY);
+        SHADER_SHADOW.setMVP(Transformation.IDENTITY);
         shadowMap.bind();
-        glEnable(GL_DEPTH_TEST);
+        GLState.enable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT);
         for (Renderable r : renderTask) {
@@ -114,6 +109,5 @@ public class ShadowPass extends Behavior {
         }
         glCullFace(GL_BACK);
         GLState.bindFramebuffer(null);
-        Camera.current = Camera.camera3d;
     }
 }
