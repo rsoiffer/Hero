@@ -1,5 +1,6 @@
-package graphics;
+package graphics.models;
 
+import graphics.Renderable;
 import graphics.opengl.BufferObject;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.Shader;

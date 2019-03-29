@@ -1,4 +1,4 @@
-package graphics;
+package graphics.models;
 
 import graphics.opengl.BufferObject;
 import graphics.opengl.VertexArrayObject;

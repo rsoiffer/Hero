@@ -23,6 +23,10 @@ public class AABB {
         return new AABB(lower, upper);
     }
 
+    public Vec3d center() {
+        return lower.lerp(upper, .5);
+    }
+
     public boolean contains(Vec3d point) {
         return lower.x < point.x && point.x < upper.x
                 && lower.y < point.y && point.y < upper.y

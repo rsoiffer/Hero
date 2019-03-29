@@ -1,4 +1,4 @@
-package graphics;
+package graphics.models;
 
 public interface Model {
 

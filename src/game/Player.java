@@ -20,7 +20,7 @@ public class Player extends Behavior {
     public final AccelerationBehavior3d acceleration = require(AccelerationBehavior3d.class);
     public final PhysicsBehavior physics = require(PhysicsBehavior.class);
 
-    public Vec3d webLeft, webRight;
+    public Vec3d cameraOffset = new Vec3d(0, 0, .8);
 
     public void applyForce(Vec3d force, double dampening) {
         if (velocity.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
@@ -45,7 +45,7 @@ public class Player extends Behavior {
 
     @Override
     public void step() {
-        Camera.camera3d.position = position.position.add(new Vec3d(0, 0, -1));
+        Camera.camera3d.position = position.position.add(cameraOffset);
         double friction = physics.onGround ? 2 : .01;
         velocity.velocity = velocity.velocity.mul(Math.exp(-dt() * friction));
     }

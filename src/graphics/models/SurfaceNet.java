@@ -1,5 +1,6 @@
-package graphics;
+package graphics.models;
 
+import graphics.SDF;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -47,7 +48,7 @@ public class SurfaceNet implements Model {
                 for (int z = zMin; z <= zMax; z++) {
                     double d = sdf.value(new Vec3d(x, y, z));
                     if (d < MAX) {
-                        set(x, y, z, Math.max(get(x, y, z), d));
+                        set(x, y, z, Math.min(get(x, y, z), d));
                     }
                 }
             }

@@ -1,5 +1,6 @@
-package game;
+package game.vr;
 
+import game.Player;
 import engine.Behavior;
 import engine.Layer;
 import static engine.Layer.RENDER3D;

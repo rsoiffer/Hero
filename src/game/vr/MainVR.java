@@ -1,9 +1,11 @@
-package game;
+package game.vr;
 
 import behaviors.FPSBehavior;
 import behaviors.QuitOnEscapeBehavior;
 import engine.Core;
 import static engine.Layer.UPDATE;
+import game.Player;
+import game.World;
 import graphics.Camera;
 import graphics.Renderable;
 import graphics.passes.RenderPipeline;
@@ -37,6 +39,7 @@ public class MainVR {
         Player p = new Player();
         p.position.position = new Vec3d(10, 10, 10);
         p.physics.world = world;
+        p.cameraOffset = new Vec3d(0, 0, -1);
         p.create();
 
 //        Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class};

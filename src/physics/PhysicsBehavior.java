@@ -6,7 +6,6 @@ import behaviors._3d.VelocityBehavior3d;
 import engine.Behavior;
 import engine.Layer;
 import game.World;
-import physics.AABB;
 import util.math.Vec3d;
 
 public class PhysicsBehavior extends Behavior {

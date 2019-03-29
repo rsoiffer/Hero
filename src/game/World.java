@@ -1,11 +1,11 @@
 package game;
 
-import graphics.CustomModel;
-import static graphics.passes.GeometryPass.SHADER_DIFFUSE;
-import static graphics.passes.GeometryPass.SHADER_PBR;
 import graphics.PBRTexture;
 import graphics.Renderable;
+import graphics.models.CustomModel;
 import graphics.opengl.Texture;
+import static graphics.passes.GeometryPass.SHADER_DIFFUSE;
+import static graphics.passes.GeometryPass.SHADER_PBR;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +101,16 @@ public class World implements Renderable {
         for (int i = 0; i < walls.length; i++) {
             walls[i].createVAO();
         }
+    }
+
+    public double raycastDown(Vec3d pos) {
+        double d = Double.MAX_VALUE;
+        for (AABB b : buildings) {
+            if (b.contains(pos.setZ(b.center().z))) {
+                d = Math.min(d, pos.z - b.upper.z);
+            }
+        }
+        return d;
     }
 
     @Override

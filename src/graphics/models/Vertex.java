@@ -1,4 +1,4 @@
-package graphics;
+package graphics.models;
 
 import graphics.opengl.BufferObject;
 import graphics.opengl.VertexArrayObject;
@@ -11,7 +11,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class Vertex {
+class Vertex {
 
     public final Vec3d position;
     public final Vec2d texCoord;
@@ -19,7 +19,7 @@ public class Vertex {
     public final Vec3d tangent;
     public final Vec3d bitangent;
 
-    public Vertex(Vec3d position, Vec2d texCoord, Vec3d normal, Vec3d tangent, Vec3d bitangent) {
+    Vertex(Vec3d position, Vec2d texCoord, Vec3d normal, Vec3d tangent, Vec3d bitangent) {
         this.position = position;
         this.texCoord = texCoord;
         this.normal = normal;
@@ -27,11 +27,11 @@ public class Vertex {
         this.bitangent = bitangent;
     }
 
-    public static VertexArrayObject createVAO(List<Vertex> vertices) {
+    static VertexArrayObject createVAO(List<Vertex> vertices) {
         return createVAO(createVBO(vertices));
     }
 
-    public static VertexArrayObject createVAO(BufferObject vbo) {
+    static VertexArrayObject createVAO(BufferObject vbo) {
         return VertexArrayObject.createVAO(() -> {
             vbo.bind();
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 14 * 4, 0);
@@ -47,7 +47,7 @@ public class Vertex {
         });
     }
 
-    public static BufferObject createVBO(List<Vertex> vertices) {
+    static BufferObject createVBO(List<Vertex> vertices) {
         BufferObject vbo = new BufferObject(GL_ARRAY_BUFFER);
         fillVBO(vbo, vertices);
         return vbo;
@@ -63,7 +63,7 @@ public class Vertex {
         };
     }
 
-    public static void fillVBO(BufferObject vbo, List<Vertex> vertices) {
+    static void fillVBO(BufferObject vbo, List<Vertex> vertices) {
         float[] data = new float[14 * vertices.size()];
         for (int i = 0; i < vertices.size(); i++) {
             System.arraycopy(vertices.get(i).data(), 0, data, 14 * i, 14);

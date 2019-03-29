@@ -1,4 +1,4 @@
-package game;
+package game.vr;
 
 import engine.Behavior;
 import static engine.Core.dt;

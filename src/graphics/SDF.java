@@ -6,6 +6,16 @@ public interface SDF {
 
     public double value(Vec3d v);
 
+    public static SDF cone(Vec3d pos, Vec3d dir, double width) {
+        Vec3d dir2 = dir.normalize();
+        double d1 = width / Math.sqrt(1 + width * width);
+        double d2 = 1 / Math.sqrt(1 + width * width);
+        return v -> {
+            double q = v.sub(pos).dot(dir2);
+            return q * d1 - v.sub(pos).sub(dir2.mul(q)).length() * d2;
+        };
+    }
+
     public static SDF cylinder(Vec3d pos, Vec3d dir, double radius) {
         Vec3d dir2 = dir.normalize();
         return v -> radius - v.sub(pos).sub(dir2.mul(v.sub(pos).dot(dir2))).length();
@@ -28,7 +38,6 @@ public interface SDF {
             }
             return d;
         };
-//        return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).min().getAsDouble();
     }
 
     public static SDF intersectionSmooth(double k, SDF... a) {
@@ -39,7 +48,6 @@ public interface SDF {
             }
             return -Math.log(d) / k;
         };
-        //return v -> -1 / k * Math.log(Stream.of(a).mapToDouble(sdf -> Math.exp(-k * sdf.value(v))).sum());
     }
 
     public default SDF invert() {
@@ -66,6 +74,5 @@ public interface SDF {
             }
             return d;
         };
-        // return v -> Stream.of(a).mapToDouble(sdf -> sdf.value(v)).max().getAsDouble();
     }
 }
