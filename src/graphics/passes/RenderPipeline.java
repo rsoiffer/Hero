@@ -6,7 +6,6 @@ import static engine.Layer.RENDER3D;
 import graphics.Camera;
 import graphics.Color;
 import graphics.Renderable;
-import graphics.opengl.Framebuffer;
 import graphics.opengl.GLState;
 import graphics.sprites.Sprite;
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ public class RenderPipeline extends Behavior {
 
         Camera.current = Camera.camera2d;
         GLState.disable(GL_DEPTH_TEST);
-        Framebuffer.clearWindow(Color.BLACK);
+        GLState.bindFramebuffer(null);
         if (isVR) {
             Sprite.drawTexture(lpList.get(0).colorBuffer(), Transformation.create(new Vec2d(.25, .5), new Vec2d(.48, 0), new Vec2d(0, .96)), Color.WHITE);
             Sprite.drawTexture(lpList.get(1).colorBuffer(), Transformation.create(new Vec2d(.75, .5), new Vec2d(.48, 0), new Vec2d(0, .96)), Color.WHITE);

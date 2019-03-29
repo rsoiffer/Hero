@@ -1,10 +1,12 @@
 package game;
 
 import behaviors.FPSBehavior;
+import behaviors.QuitOnEscapeBehavior;
 import engine.Core;
 import static engine.Core.dt;
 import engine.Input;
 import static engine.Layer.UPDATE;
+import engine.Settings;
 import graphics.AssimpModel;
 import graphics.Camera;
 import static graphics.Camera.camera3d;
@@ -16,14 +18,12 @@ import static graphics.SDF.cylinder;
 import static graphics.SDF.halfSpace;
 import static graphics.SDF.intersectionSmooth;
 import graphics.SurfaceNet;
-import graphics.Window;
 import graphics.passes.RenderPipeline;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
@@ -40,18 +40,15 @@ import util.math.Vec3d;
 public class Main {
 
     public static void main(String[] args) {
+        Settings.SHOW_CURSOR = false;
         Core.init();
 
         new FPSBehavior().create();
-        Window.window.setCursorEnabled(false);
-
+        new QuitOnEscapeBehavior().create();
         Camera.current = camera3d;
         camera3d.position = new Vec3d(10, 10, 10);
 
         UPDATE.onStep(() -> {
-            if (Input.keyJustPressed(GLFW_KEY_ESCAPE)) {
-                Core.stopGame();
-            }
             moveCamera();
         });
 

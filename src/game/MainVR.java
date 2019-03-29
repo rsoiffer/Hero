@@ -1,15 +1,14 @@
 package game;
 
 import behaviors.FPSBehavior;
+import behaviors.QuitOnEscapeBehavior;
 import engine.Core;
-import engine.Input;
 import static engine.Layer.UPDATE;
 import graphics.Camera;
 import graphics.Renderable;
 import graphics.passes.RenderPipeline;
 import java.util.Arrays;
 import java.util.List;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import util.math.Vec3d;
 import vr.Vive;
 import vr.ViveInput;
@@ -21,13 +20,11 @@ public class MainVR {
         Core.init();
 
         new FPSBehavior().create();
+        new QuitOnEscapeBehavior().create();
         Camera.current = Camera.camera3d;
         Vive.init();
 
         UPDATE.onStep(() -> {
-            if (Input.keyJustPressed(GLFW_KEY_ESCAPE)) {
-                Core.stopGame();
-            }
             ViveInput.update();
             if (ViveInput.LEFT.buttonDown(MENU) && ViveInput.RIGHT.buttonDown(MENU)) {
                 ViveInput.resetRightLeft();
