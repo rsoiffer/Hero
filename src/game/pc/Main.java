@@ -78,6 +78,7 @@ public class Main {
         Frozone f2 = new Frozone();
         f2.player.position.position = new Vec3d(-10, -10, 10);
         f2.player.physics.world = world;
+        f2.player.cameraOffset = null;
         f2.iceModel = iceModel;
         f2.isPlayer = false;
         f2.create();

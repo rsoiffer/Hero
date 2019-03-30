@@ -45,7 +45,9 @@ public class Player extends Behavior {
 
     @Override
     public void step() {
-        Camera.camera3d.position = position.position.add(cameraOffset);
+        if (cameraOffset != null) {
+            Camera.camera3d.position = position.position.add(cameraOffset);
+        }
         double friction = physics.onGround ? 2 : .01;
         velocity.velocity = velocity.velocity.mul(Math.exp(-dt() * friction));
     }

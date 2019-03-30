@@ -29,6 +29,7 @@ public class Frozone extends Behavior {
     public boolean fly = false;
     public SurfaceNet iceModel;
     public double timer;
+    public double timer2;
 
     public boolean isPlayer = true;
 
@@ -66,23 +67,23 @@ public class Frozone extends Behavior {
 
     private void moveTowards(Vec3d vel) {
         timer += dt();
+        timer2 += dt();
 
         double height = player.physics.world.raycastDown(player.position.position);
         double speedMod = 8 + 50 * Math.pow(.7, height);
 
         Vec3d side = player.velocity.velocity.add(MathUtils.randomInSphere(new Random()).mul(1e-12)).cross(new Vec3d(0, 0, 1));
-        player.velocity.velocity = player.velocity.velocity.add(side.mul(.2 * Math.sin(5 * timer) * dt()));
 
-        Vec3d accel = vel.div(20).sub(player.velocity.velocity.normalize());
-        Vec3d normal = new Vec3d(0, 0, 1).lerp(accel, .6).normalize();
-
-        player.velocity.velocity = player.velocity.velocity.add(vel.mul(dt()));
+        Vec3d accel = vel.add(side.mul(.1 * Math.sin(5 * timer))).add(new Vec3d(0, 0, speedMod));
+        player.velocity.velocity = player.velocity.velocity.add(accel.mul(dt()));
         if (player.velocity.velocity.length() > 20) {
             player.velocity.velocity = player.velocity.velocity.setLength(20);
         }
-        player.velocity.velocity = player.velocity.velocity.add(new Vec3d(0, 0, speedMod * dt()));
 
-        createIce(player.position.position, player.position.position.add(player.velocity.velocity.mul(.3)), normal);
+        if (timer2 > 0) {
+            timer2 -= 1 / 60.;
+            createIce(player.position.position, player.position.position.add(player.velocity.velocity.mul(.3)), accel);
+        }
     }
 
     @Override
