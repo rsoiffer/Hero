@@ -1,14 +1,13 @@
 package graphics.passes;
 
+import game.RenderableBehavior;
 import graphics.Camera;
 import static graphics.Color.BLACK;
-import graphics.Renderable;
 import graphics.opengl.Framebuffer;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
-import java.util.List;
 import static org.lwjgl.opengl.GL11C.GL_BLEND;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
@@ -27,6 +26,7 @@ import util.math.Vec2d;
 
 public class GeometryPass implements Runnable {
 
+    public static final Shader SHADER_COLOR = Shader.load("geometry_pass_color");
     public static final Shader SHADER_DIFFUSE = Shader.load("geometry_pass_diffuse");
     public static final Shader SHADER_PBR = Shader.load("geometry_pass_pbr");
 
@@ -39,7 +39,6 @@ public class GeometryPass implements Runnable {
         SHADER_PBR.setUniform("heightMap", 5);
     }
 
-    public List<Renderable> renderTask;
     public Camera camera;
 
     private final Framebuffer gBuffer;
@@ -77,13 +76,12 @@ public class GeometryPass implements Runnable {
         GLState.disable(GL_BLEND);
         gBuffer.clear(BLACK);
         updateShaderUniforms();
-        for (Renderable r : renderTask) {
-            r.renderGeom();
-        }
+        RenderableBehavior.allRenderables().forEach(r -> r.renderGeom());
         GLState.bindFramebuffer(null);
     }
 
     public static void updateShaderUniforms() {
+        SHADER_COLOR.setMVP(Transformation.IDENTITY);
         SHADER_DIFFUSE.setMVP(Transformation.IDENTITY);
         SHADER_PBR.setMVP(Transformation.IDENTITY);
         SHADER_PBR.setUniform("camPos", Camera.current.getPos());

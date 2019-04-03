@@ -1,5 +1,6 @@
 package graphics.models;
 
+import graphics.models.Vertex.VertexPBR;
 import graphics.opengl.BufferObject;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
@@ -28,13 +29,13 @@ public class AssimpModel implements Model {
     private final BufferObject ebo;
 
     public AssimpModel(AIScene scene) {
-        List<Vertex> vertices = new ArrayList();
+        List<VertexPBR> vertices = new ArrayList();
         List<Integer> indices = new ArrayList();
 
         for (int i = 0; i < scene.mNumMeshes(); i++) {
             AIMesh mesh = AIMesh.create(scene.mMeshes().get(i));
             for (int j = 0; j < mesh.mNumVertices(); j++) {
-                vertices.add(new Vertex(
+                vertices.add(new VertexPBR(
                         toVec3d(mesh.mVertices().get(j)),
                         toVec2d(mesh.mTextureCoords(0).get(j)),
                         toVec3d(mesh.mNormals().get(j)),
@@ -50,7 +51,7 @@ public class AssimpModel implements Model {
         }
 
         num = indices.size();
-        vao = Vertex.createVAO(vertices);
+        vao = Vertex.createVAO(vertices, new int[]{3, 2, 3, 3, 3});
         ebo = new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices.stream().mapToInt(i -> i).toArray());
     }
 

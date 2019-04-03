@@ -2,10 +2,11 @@ package game.vr;
 
 import engine.Behavior;
 import engine.Layer;
-import static engine.Layer.RENDER3D;
 import static game.Player.POSTPHYSICS;
-import graphics.Color;
-import graphics.voxels.VoxelModel;
+import game.RenderableBehavior;
+import static game.RenderableBehavior.createRB;
+import graphics.models.VoxelModel2;
+import graphics.renderables.ColorModel;
 import util.math.Transformation;
 import util.math.Vec3d;
 import static vr.ViveInput.TRIGGER;
@@ -17,26 +18,19 @@ public class WebSlinger extends Behavior {
     public Vec3d web;
     public double prefLength;
 
-    private Behavior renderer;
+    public ColorModel webModel;
+    public RenderableBehavior webRB;
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel.load("controller.vox");
-        renderer = RENDER3D.onStep(() -> {
-            if (web != null) {
-                Vec3d pos = controller.pos();
-                Vec3d forwards = web.sub(pos);
-                Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
-                Vec3d up = forwards.cross(side).setLength(.05);;
-                Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
-                VoxelModel.load("singlevoxel.vox").render(Transformation.create(pos2, forwards, side, up), Color.WHITE);
-            }
-        });
+        controller.model = VoxelModel2.load("controller.vox");
+        webModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
+        webRB = createRB(webModel);
     }
 
     @Override
     public void destroyInner() {
-        renderer.destroy();
+        webRB.destroy();
     }
 
     @Override
@@ -75,6 +69,16 @@ public class WebSlinger extends Behavior {
 //
 //            double pullStrength = Math.exp(-.02 * pullDir.dot(controller.player.velocity.velocity));
 //            controller.player.velocity.velocity = controller.player.velocity.velocity.add(pullDir.mul(pullStrength * dt() * 20));
+        }
+
+        webRB.visible = web != null;
+        if (webRB.visible) {
+            Vec3d pos = controller.pos();
+            Vec3d forwards = web.sub(pos);
+            Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
+            Vec3d up = forwards.cross(side).setLength(.05);;
+            Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
+            webModel.t = Transformation.create(pos2, forwards, side, up);
         }
     }
 }

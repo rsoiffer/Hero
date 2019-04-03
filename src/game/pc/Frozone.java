@@ -81,7 +81,7 @@ public class Frozone extends Behavior {
         }
 
         if (timer2 > 0) {
-            timer2 -= 1 / 60.;
+            timer2 -= 1 / 30.;
             createIce(player.position.position, player.position.position.add(player.velocity.velocity.mul(.3)), accel);
         }
     }

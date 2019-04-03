@@ -1,5 +1,6 @@
 package graphics.models;
 
+import graphics.models.Vertex.VertexPBR;
 import graphics.opengl.BufferObject;
 import graphics.opengl.VertexArrayObject;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import util.math.Vec3d;
 
 public class CustomModel implements Model {
 
-    private final List<Vertex> vertices = new ArrayList();
+    private final List<VertexPBR> vertices = new ArrayList();
     private int numVertices;
     private BufferObject vbo;
     private VertexArrayObject vao;
@@ -30,9 +31,9 @@ public class CustomModel implements Model {
         Vec3d tangent = edge1.mul(duv2.y).add(edge2.mul(-duv1.y)).normalize();
         Vec3d bitangent = edge1.mul(-duv2.x).add(edge2.mul(duv1.x)).normalize();
         vertices.addAll(Arrays.asList(
-                new Vertex(p1, uv1, normal, tangent, bitangent),
-                new Vertex(p2, uv2, normal, tangent, bitangent),
-                new Vertex(p3, uv3, normal, tangent, bitangent)
+                new VertexPBR(p1, uv1, normal, tangent, bitangent),
+                new VertexPBR(p2, uv2, normal, tangent, bitangent),
+                new VertexPBR(p3, uv3, normal, tangent, bitangent)
         ));
     }
 
@@ -43,7 +44,7 @@ public class CustomModel implements Model {
     public void createVAO() {
         numVertices = vertices.size();
         vbo = Vertex.createVBO(vertices);
-        vao = Vertex.createVAO(vbo);
+        vao = Vertex.createVAO(vbo, new int[]{3, 2, 3, 3, 3});
     }
 
     @Override
@@ -54,12 +55,12 @@ public class CustomModel implements Model {
 
     public void smoothVertexNormals() {
         HashMap<Vec3d, Vec3d> normals = new HashMap();
-        for (Vertex v : vertices) {
+        for (VertexPBR v : vertices) {
             normals.compute(v.position, (key, val) -> val == null ? v.normal : val.add(v.normal));
         }
         for (int i = 0; i < vertices.size(); i++) {
-            Vertex v = vertices.get(i);
-            Vertex v2 = new Vertex(v.position, v.texCoord, normals.get(v.position).normalize(), v.tangent, v.bitangent);
+            VertexPBR v = vertices.get(i);
+            VertexPBR v2 = new VertexPBR(v.position, v.texCoord, normals.get(v.position).normalize(), v.tangent, v.bitangent);
             vertices.set(i, v2);
         }
     }

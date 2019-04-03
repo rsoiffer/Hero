@@ -3,12 +3,13 @@ package game.vr;
 import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
-import static engine.Layer.RENDER3D;
 import static game.Player.POSTPHYSICS;
-import graphics.voxels.VoxelModel;
+import game.RenderableBehavior;
+import static game.RenderableBehavior.createRB;
+import graphics.models.VoxelModel2;
+import graphics.renderables.ColorModel;
 import util.math.Transformation;
 import util.math.Vec3d;
-import util.math.Vec4d;
 import static vr.ViveInput.TRIGGER;
 
 public class Hookshot extends Behavior {
@@ -17,27 +18,20 @@ public class Hookshot extends Behavior {
 
     public Vec3d hookPos, hookVel;
     public boolean grabbing;
-
-    private Behavior renderer;
+    public ColorModel lineModel;
+    public RenderableBehavior lineRB;
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel.load("controller_gray.vox");
-        renderer = RENDER3D.onStep(() -> {
-            if (hookPos != null) {
-                Vec3d pos = controller.pos();
-                Vec3d forwards = hookPos.sub(pos);
-                Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
-                Vec3d up = forwards.cross(side).setLength(.05);;
-                Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
-                VoxelModel.load("singlevoxel.vox").render(Transformation.create(pos2, forwards, side, up), new Vec4d(.5, .5, .5, 1));
-            }
-        });
+        controller.model = VoxelModel2.load("controller_gray.vox");
+        lineModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
+        lineModel.color = new Vec3d(.5, .5, .5);
+        lineRB = createRB(lineModel);
     }
 
     @Override
     public void destroyInner() {
-        renderer.destroy();
+        lineRB.destroy();
     }
 
     @Override
@@ -65,6 +59,16 @@ public class Hookshot extends Behavior {
                 controller.player.velocity.velocity = controller.player.velocity.velocity.lerp(
                         pullDir.mul(40), 1 - Math.exp(-1 * dt()));
             }
+        }
+
+        lineRB.visible = hookPos != null;
+        if (lineRB.visible) {
+            Vec3d pos = controller.pos();
+            Vec3d forwards = hookPos.sub(pos);
+            Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
+            Vec3d up = forwards.cross(side).setLength(.05);;
+            Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
+            lineModel.t = Transformation.create(pos2, forwards, side, up);
         }
     }
 }

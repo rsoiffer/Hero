@@ -103,7 +103,7 @@ vec3 CalculateLighting(vec3 Normal, vec3 Albedo, float Metallic, float Roughness
 vec3 FakeIrradiance(vec3 dir, float roughness)
 {
     float x = tanh(cos(dir.z) / (roughness + .01));
-    return ((.5 + .5 * x) * vec3(.4, .7, 1) + (.5 - .5 * x) * vec3(.3, .3, .3)) * .1;
+    return mix(vec3(.4, .7, 1), vec3(.3, .3, .3), x) * .1;
 }
 // ----------------------------------------------------------------------------
 vec3 rgb2hsv(vec3 c)

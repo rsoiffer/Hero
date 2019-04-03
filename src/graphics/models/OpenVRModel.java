@@ -1,8 +1,7 @@
 package graphics.models;
 
-import graphics.Renderable;
+import graphics.models.Vertex.VertexPBR;
 import graphics.opengl.BufferObject;
-import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
 import graphics.opengl.VertexArrayObject;
@@ -26,20 +25,21 @@ import util.math.Vec2d;
 import util.math.Vec3d;
 import vr.ViveInput.ViveController;
 
-public class OpenVRModel implements Renderable {
+public class OpenVRModel implements Model {
 
     private static final Shader DIFFUSE_SHADER = Shader.load("geometry_pass_diffuse");
 
-    private final ViveController vc;
+    public final ViveController vc;
+    public final Texture diffuseTexture;
+
     private final int num;
     private final VertexArrayObject vao;
     private final BufferObject ebo;
-    private final Texture diffuseTexture;
 
     public OpenVRModel(ViveController vc) {
         this.vc = vc;
 
-        List<Vertex> vertices = new ArrayList();
+        List<VertexPBR> vertices = new ArrayList();
         List<Integer> indices = new ArrayList();
 
         RenderModel rm;
@@ -62,7 +62,7 @@ public class OpenVRModel implements Renderable {
             rmtm = RenderModelTextureMap.create(pb.get());
         }
 
-        rm.rVertexData().forEach(rmv -> vertices.add(new Vertex(
+        rm.rVertexData().forEach(rmv -> vertices.add(new VertexPBR(
                 toVec3d(rmv.vPosition()),
                 new Vec2d(rmv.rfTextureCoord(0), rmv.rfTextureCoord(1)),
                 toVec3d(rmv.vNormal()),
@@ -73,7 +73,7 @@ public class OpenVRModel implements Renderable {
         }
 
         num = indices.size();
-        vao = Vertex.createVAO(vertices);
+        vao = Vertex.createVAO(vertices, new int[]{3, 2, 3, 3, 3});
         ebo = new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices.stream().mapToInt(i -> i).toArray());
 
         diffuseTexture = new Texture(GL_TEXTURE_2D);
@@ -82,16 +82,7 @@ public class OpenVRModel implements Renderable {
     }
 
     @Override
-    public void renderGeom() {
-        bindAll(DIFFUSE_SHADER, diffuseTexture);
-        setTransform(vc.pose());
-        vao.bind();
-        glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
-    }
-
-    @Override
-    public void renderShadow() {
-        setTransform(vc.pose());
+    public void render() {
         vao.bind();
         glDrawElements(GL_TRIANGLES, num, GL_UNSIGNED_INT, 0);
     }

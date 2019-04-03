@@ -1,7 +1,7 @@
 package graphics.passes;
 
+import game.RenderableBehavior;
 import graphics.Camera;
-import graphics.Renderable;
 import graphics.opengl.Framebuffer;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
@@ -38,7 +38,6 @@ public class ShadowPass implements Runnable {
 
     private static final Shader SHADER_SHADOW = Shader.load("shadow_pass");
 
-    public List<Renderable> renderTask;
     public List<Camera> cameras;
     public double zMin = -1, zMax = 1;
     public Vec3d sunDirection;
@@ -104,9 +103,7 @@ public class ShadowPass implements Runnable {
         GLState.enable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT);
-        for (Renderable r : renderTask) {
-            r.renderShadow();
-        }
+        RenderableBehavior.allRenderables().forEach(r -> r.renderShadow());
         glCullFace(GL_BACK);
         GLState.bindFramebuffer(null);
     }

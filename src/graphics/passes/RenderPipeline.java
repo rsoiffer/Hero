@@ -5,7 +5,6 @@ import engine.Layer;
 import static engine.Layer.RENDER3D;
 import graphics.Camera;
 import graphics.Color;
-import graphics.Renderable;
 import graphics.opengl.GLState;
 import graphics.sprites.Sprite;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ public class RenderPipeline extends Behavior {
     public Color skyColor = new Color(.4, .7, 1, 1);
     public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.3);
     public Vec3d sunDirection = new Vec3d(.4, -.2, 1);
-    public List<Renderable> renderTask;
     public boolean isVR;
 
     private List<Camera> cameras;
@@ -39,7 +37,6 @@ public class RenderPipeline extends Behavior {
 
         for (int i = 0; i < 5; i++) {
             ShadowPass sp = new ShadowPass();
-            sp.renderTask = renderTask;
             sp.cameras = cameras;
             sp.zMin = i == 0 ? -1 : (1 - Math.pow(.3, i + 2));
             sp.zMax = 1 - Math.pow(.3, i + 3);
@@ -49,7 +46,6 @@ public class RenderPipeline extends Behavior {
 
         for (int i = 0; i < cameras.size(); i++) {
             GeometryPass gp = new GeometryPass(framebufferSizes.get(i));
-            gp.renderTask = renderTask;
             gp.camera = cameras.get(i);
             gpList.add(gp);
 

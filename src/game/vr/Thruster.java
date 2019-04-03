@@ -3,16 +3,12 @@ package game.vr;
 import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
-import static engine.Layer.RENDER3D;
 import static game.Player.POSTPHYSICS;
-import graphics.Color;
-import graphics.voxels.VoxelModel;
+import graphics.models.VoxelModel2;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import util.math.MathUtils;
-import util.math.Quaternion;
-import util.math.Transformation;
 import util.math.Vec3d;
 import vr.ViveInput;
 
@@ -22,21 +18,9 @@ public class Thruster extends Behavior {
 
     public List<Particle> particles = new LinkedList();
 
-    private Behavior renderer;
-
     @Override
     public void createInner() {
-        controller.model = VoxelModel.load("controller_red.vox");
-        renderer = RENDER3D.onStep(() -> {
-            for (Particle p : particles) {
-                VoxelModel.load("fireball.vox").render(Transformation.create(p.position.add(p.velocity.mul(p.time)).sub(1 / 8.), Quaternion.IDENTITY, 1 / 32.), Color.WHITE);
-            }
-        });
-    }
-
-    @Override
-    public void destroyInner() {
-        renderer.destroy();
+        controller.model = VoxelModel2.load("controller_red.vox");
     }
 
     @Override

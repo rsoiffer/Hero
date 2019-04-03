@@ -201,7 +201,7 @@ public class SurfaceNet implements Model {
                     e.addToModel();
                 }
             }
-            // model.smoothVertexNormals();
+            model.smoothVertexNormals();
             model.updateVBO();
         }
 
