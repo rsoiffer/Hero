@@ -15,6 +15,7 @@ import static graphics.SDF.halfSpace;
 import static graphics.SDF.intersectionSmooth;
 import graphics.models.SurfaceNet;
 import graphics.models.VoxelModel2;
+import graphics.renderables.ColorModel;
 import graphics.renderables.PBRModel;
 import graphics.renderables.Renderable;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ import vr.EyeCamera;
 
 public class IceCaster extends Behavior {
 
-    private static SurfaceNet iceModel = new SurfaceNet(.5);
+    public static SurfaceNet iceModel = new SurfaceNet(.5);
     private static PBRTexture iceTexture = PBRTexture.loadFromFolder("ice2");
     private static Renderable iceRenderable = new PBRModel(iceModel, iceTexture);
     private static RenderableBehavior iceRB = createRB(iceRenderable);
@@ -62,7 +63,8 @@ public class IceCaster extends Behavior {
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel2.load("controller_blue.vox");
+        // controller.model = VoxelModel2.load("controller_blue.vox");
+        controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_blue.vox"));
     }
 
     @Override

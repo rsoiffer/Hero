@@ -23,7 +23,8 @@ public class Hookshot extends Behavior {
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel2.load("controller_gray.vox");
+        // controller.model = VoxelModel2.load("controller_gray.vox");
+        controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_gray.vox"));
         lineModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
         lineModel.color = new Vec3d(.5, .5, .5);
         lineRB = createRB(lineModel);

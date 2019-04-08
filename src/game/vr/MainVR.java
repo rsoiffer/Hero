@@ -45,6 +45,14 @@ public class MainVR {
         p.cameraOffset = new Vec3d(0, 0, -1);
         p.create();
 
+//        Frozone f2 = new Frozone();
+//        f2.player.position.position = new Vec3d(-10, -10, 10);
+//        f2.player.physics.world = world;
+//        f2.player.cameraOffset = null;
+//        f2.iceModel = IceCaster.iceModel;
+//        f2.isPlayer = false;
+//        f2.create();
+
         Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class};
         Mutable<Integer> leftType = new Mutable(0);
         Mutable<Behavior> left = new Mutable(null);

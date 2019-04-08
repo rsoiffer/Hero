@@ -23,7 +23,8 @@ public class WebSlinger extends Behavior {
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel2.load("controller.vox");
+        // controller.model = VoxelModel2.load("controller.vox");
+        controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller.vox"));
         webModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
         webRB = createRB(webModel);
     }

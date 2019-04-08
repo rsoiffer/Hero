@@ -5,6 +5,7 @@ import static engine.Core.dt;
 import engine.Layer;
 import static game.Player.POSTPHYSICS;
 import graphics.models.VoxelModel2;
+import graphics.renderables.ColorModel;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -20,7 +21,8 @@ public class Thruster extends Behavior {
 
     @Override
     public void createInner() {
-        controller.model = VoxelModel2.load("controller_red.vox");
+        // controller.model = VoxelModel2.load("controller_red.vox");
+        controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_red.vox"));
     }
 
     @Override

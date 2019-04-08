@@ -21,11 +21,11 @@ public class ControllerBehavior extends Behavior {
 
     public ViveController controller;
     public Player player;
-    public VoxelModel2 model = VoxelModel2.load("controller.vox");
+    // public VoxelModel2 model = VoxelModel2.load("controller.vox");
 
     @Override
     public void createInner() {
-        renderable.renderable = new ColorModel(model);
+        // renderable.renderable = new ColorModel(model);
     }
 
     public Transformation getTransform() {
