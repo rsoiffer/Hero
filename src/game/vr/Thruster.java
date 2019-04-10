@@ -4,12 +4,18 @@ import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
 import static game.Player.POSTPHYSICS;
+import game.RenderableBehavior;
+import static game.RenderableBehavior.createRB;
 import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
+import graphics.renderables.ColorModelParticles;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import util.math.MathUtils;
+import util.math.Quaternion;
+import util.math.Transformation;
 import util.math.Vec3d;
 import vr.ViveInput;
 
@@ -18,11 +24,20 @@ public class Thruster extends Behavior {
     public final ControllerBehavior controller = require(ControllerBehavior.class);
 
     public List<Particle> particles = new LinkedList();
+    public ColorModelParticles particlesModel;
+    public RenderableBehavior particlesRB;
 
     @Override
     public void createInner() {
         // controller.model = VoxelModel2.load("controller_red.vox");
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_red.vox"));
+        particlesModel = new ColorModelParticles(VoxelModel2.load("fireball.vox"));
+        particlesRB = createRB(particlesModel);
+    }
+
+    @Override
+    public void destroyInner() {
+        particlesRB.destroy();
     }
 
     @Override
@@ -51,6 +66,7 @@ public class Thruster extends Behavior {
             p.time += dt();
         }
         particles.removeIf(p -> p.time > .2);
+        particlesModel.transforms = particles.stream().map(p -> p.transform()).collect(Collectors.toList());
     }
 
     public static class Particle {
@@ -61,6 +77,10 @@ public class Thruster extends Behavior {
         public Particle(Vec3d position, Vec3d velocity) {
             this.position = position;
             this.velocity = velocity;
+        }
+
+        public Transformation transform() {
+            return Transformation.create(position.add(velocity.mul(time)).sub(1 / 8.), Quaternion.IDENTITY, 1 / 32.);
         }
     }
 }
