@@ -32,6 +32,16 @@ public class Player extends Behavior {
         velocity.velocity = velocity.velocity.add(force.mul(dt()));
     }
 
+    public void applyForce2(Vec3d force, double dampening) {
+        if (velocity.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
+            Vec3d v = velocity.velocity.normalize();
+            Vec3d forceAlongVelocity = v.mul(v.dot(force));
+            double multiplier = -1 + Math.log(1 + Math.exp(-dampening * velocity.velocity.dot(force.normalize())));
+            force = force.add(forceAlongVelocity.mul(multiplier));
+        }
+        velocity.velocity = velocity.velocity.add(force.mul(dt()));
+    }
+
     @Override
     public void createInner() {
         acceleration.acceleration = new Vec3d(0, 0, -10);

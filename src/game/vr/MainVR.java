@@ -54,7 +54,8 @@ public class MainVR {
 //        f2.iceModel = IceCaster.iceModel;
 //        f2.isPlayer = false;
 //        f2.create();
-        Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class, Wing.class, Hand.class};
+        Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class,
+            Wing.class, Hand.class, Explosion.class, Teleport.class};
         Mutable<Integer> leftType = new Mutable(0);
         Mutable<Behavior> left = new Mutable(null);
         Mutable<Integer> rightType = new Mutable(0);

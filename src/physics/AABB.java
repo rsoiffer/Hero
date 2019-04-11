@@ -50,6 +50,15 @@ public class AABB {
         return times.filter(d -> d >= 0).filter(d -> contains(start.add(dir.mul(d + .001)))).min().orElse(-1);
     }
 
+    public double raycastZ(Vec3d start, Vec3d dir) {
+        Vec3d timeToLower = lower.sub(start).div(dir);
+        Vec3d timeToUpper = upper.sub(start).div(dir);
+        DoubleStream times = DoubleStream.of(timeToLower.z, timeToUpper.z);
+        return times.filter(d -> d >= 0).filter(d
+                -> contains(start.add(dir.mul(d + .001))) || contains(start.add(dir.mul(d - .001)))
+        ).min().orElse(-1);
+    }
+
     public Vec3d size() {
         return upper.sub(lower);
     }
