@@ -23,6 +23,8 @@ public class World extends Behavior {
     public static final double FLOOR_HEIGHT = 4;
     public static final double BUILDING_SIZE = 32;
     public static final double STREET_WIDTH = 20;
+    public static final double BLOCK_WIDTH = 2 * BUILDING_SIZE + STREET_WIDTH;
+    public static final double BLOCK_HEIGHT = 8 * BUILDING_SIZE + STREET_WIDTH;
 
     private static final int NUM_WALL_TYPES = 10;
     private static final double[] WALL_SCALES = {2, 9, 3, 8, 4, 3, 3, 4, 6, 10};
@@ -38,8 +40,8 @@ public class World extends Behavior {
     public void createInner() {
         Noise heightNoise = new Noise(new Random());
 
-        for (int i = 0; i < 2000; i += 2 * BUILDING_SIZE + STREET_WIDTH) {
-            for (int j = 0; j < 2000; j += 8 * BUILDING_SIZE + STREET_WIDTH) {
+        for (int i = 0; i < 2000; i += BLOCK_WIDTH) {
+            for (int j = 0; j < 2000; j += BLOCK_HEIGHT) {
                 for (int k = 0; k < 200; k++) {
                     double x = i + floor(Math.random() * 2) * BUILDING_SIZE;
                     double y = j + floor(Math.random() * 8) * BUILDING_SIZE;

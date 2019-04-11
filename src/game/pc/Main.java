@@ -9,6 +9,8 @@ import engine.Settings;
 import game.Player;
 import static game.RenderableBehavior.createRB;
 import game.World;
+import static game.World.BLOCK_HEIGHT;
+import static game.World.BLOCK_WIDTH;
 import static graphics.Camera.camera3d;
 import graphics.PBRTexture;
 import graphics.models.AssimpModel;
@@ -60,13 +62,13 @@ public class Main {
         createRB(ice);
 
         Frozone f = new Frozone();
-        f.player.position.position = new Vec3d(10, 10, 10);
+        f.player.position.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
         f.player.physics.world = world;
         f.iceModel = iceModel;
         f.create();
 
         Frozone f2 = new Frozone();
-        f2.player.position.position = new Vec3d(-10, -10, 10);
+        f2.player.position.position = new Vec3d(7 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
         f2.player.physics.world = world;
         f2.player.cameraOffset = null;
         f2.iceModel = iceModel;

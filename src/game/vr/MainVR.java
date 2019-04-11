@@ -8,6 +8,8 @@ import static engine.Layer.UPDATE;
 import engine.Settings;
 import game.Player;
 import game.World;
+import static game.World.BLOCK_HEIGHT;
+import static game.World.BLOCK_WIDTH;
 import graphics.Camera;
 import graphics.passes.RenderPipeline;
 import util.Mutable;
@@ -40,7 +42,7 @@ public class MainVR {
         world.create();
 
         Player p = new Player();
-        p.position.position = new Vec3d(10, 10, 10);
+        p.position.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
         p.physics.world = world;
         p.cameraOffset = new Vec3d(0, 0, -1);
         p.create();
@@ -52,8 +54,7 @@ public class MainVR {
 //        f2.iceModel = IceCaster.iceModel;
 //        f2.isPlayer = false;
 //        f2.create();
-
-        Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class};
+        Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class, Wing.class, Hand.class};
         Mutable<Integer> leftType = new Mutable(0);
         Mutable<Behavior> left = new Mutable(null);
         Mutable<Integer> rightType = new Mutable(0);

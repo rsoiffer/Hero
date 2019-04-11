@@ -63,7 +63,6 @@ public class IceCaster extends Behavior {
 
     @Override
     public void createInner() {
-        // controller.model = VoxelModel2.load("controller_blue.vox");
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_blue.vox"));
     }
 

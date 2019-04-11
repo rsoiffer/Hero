@@ -29,10 +29,12 @@ public class Thruster extends Behavior {
 
     @Override
     public void createInner() {
-        // controller.model = VoxelModel2.load("controller_red.vox");
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_red.vox"));
         particlesModel = new ColorModelParticles(VoxelModel2.load("fireball.vox"));
         particlesRB = createRB(particlesModel);
+        particlesRB.beforeRender = () -> {
+            particlesModel.transforms = particles.stream().map(p -> p.transform()).collect(Collectors.toList());
+        };
     }
 
     @Override
@@ -66,7 +68,6 @@ public class Thruster extends Behavior {
             p.time += dt();
         }
         particles.removeIf(p -> p.time > .2);
-        particlesModel.transforms = particles.stream().map(p -> p.transform()).collect(Collectors.toList());
     }
 
     public static class Particle {

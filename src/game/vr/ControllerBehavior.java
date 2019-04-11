@@ -6,7 +6,6 @@ import static engine.Layer.POSTUPDATE;
 import game.Player;
 import game.RenderableBehavior;
 import graphics.Camera;
-import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
 import org.joml.Matrix4d;
 import util.math.Transformation;
@@ -21,19 +20,14 @@ public class ControllerBehavior extends Behavior {
 
     public ViveController controller;
     public Player player;
-    // public VoxelModel2 model = VoxelModel2.load("controller.vox");
-
-    @Override
-    public void createInner() {
-        // renderable.renderable = new ColorModel(model);
-    }
+    public Vec3d modelOffset = new Vec3d(4, 4, 4);
 
     public Transformation getTransform() {
         return new Transformation(new Matrix4d()
                 .translate(Camera.camera3d.position.toJOML())
                 .mul(controller.pose())
-                .translate(-.125, -.125, -.125)
-                .scale(1 / 32.));
+                .scale(1 / 32.)
+                .translate(modelOffset.mul(-1).toJOML()));
     }
 
     @Override

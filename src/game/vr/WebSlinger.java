@@ -23,10 +23,20 @@ public class WebSlinger extends Behavior {
 
     @Override
     public void createInner() {
-        // controller.model = VoxelModel2.load("controller.vox");
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller.vox"));
         webModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
         webRB = createRB(webModel);
+        webRB.beforeRender = () -> {
+            webRB.visible = web != null;
+            if (webRB.visible) {
+                Vec3d pos = controller.pos();
+                Vec3d forwards = web.sub(pos);
+                Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
+                Vec3d up = forwards.cross(side).setLength(.05);;
+                Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
+                webModel.t = Transformation.create(pos2, forwards, side, up);
+            }
+        };
     }
 
     @Override
@@ -70,16 +80,6 @@ public class WebSlinger extends Behavior {
 //
 //            double pullStrength = Math.exp(-.02 * pullDir.dot(controller.player.velocity.velocity));
 //            controller.player.velocity.velocity = controller.player.velocity.velocity.add(pullDir.mul(pullStrength * dt() * 20));
-        }
-
-        webRB.visible = web != null;
-        if (webRB.visible) {
-            Vec3d pos = controller.pos();
-            Vec3d forwards = web.sub(pos);
-            Vec3d side = forwards.cross(new Vec3d(0, 0, 1)).setLength(.05);
-            Vec3d up = forwards.cross(side).setLength(.05);;
-            Vec3d pos2 = pos.sub(side.div(2)).sub(up.div(2));
-            webModel.t = Transformation.create(pos2, forwards, side, up);
         }
     }
 }

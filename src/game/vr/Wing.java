@@ -1,0 +1,58 @@
+package game.vr;
+
+import engine.Behavior;
+import static engine.Core.dt;
+import engine.Layer;
+import static game.Player.POSTPHYSICS;
+import graphics.models.VoxelModel2;
+import graphics.renderables.ColorModel;
+import util.math.Vec3d;
+import vr.ViveInput;
+
+public class Wing extends Behavior {
+
+    public final ControllerBehavior controller = require(ControllerBehavior.class);
+
+    public Vec3d prevPos = null;
+
+    @Override
+    public void createInner() {
+        controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_wing.vox"));
+        if (controller.controller == ViveInput.LEFT) {
+            controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_wing_left.vox"));
+        }
+        controller.modelOffset = new Vec3d(16, 40, 2);
+    }
+
+    @Override
+    public Layer layer() {
+        return POSTPHYSICS;
+    }
+
+    @Override
+    public void step() {
+        Vec3d sideways = controller.controller.sideways();
+        if (controller.controller != ViveInput.LEFT) {
+            sideways = sideways.mul(-1);
+        }
+        Vec3d pos = controller.pos(10).add(sideways);
+
+        if (prevPos != null) {
+            Vec3d motion = pos.sub(prevPos);
+            Vec3d wingUp = controller.controller.transform(new Vec3d(0, 0, 1));
+            double strength = -motion.dot(wingUp);
+            strength *= Math.abs(strength) / dt();
+            if (strength < 0) {
+                strength *= .75;
+            }
+            strength *= 3;
+            controller.player.applyForce(wingUp.mul(strength), 0);
+        }
+        prevPos = pos;
+
+        if (!controller.player.physics.onGround) {
+            double thrustStrength = 3;
+            controller.player.applyForce(controller.controller.forwards().mul(thrustStrength), 0.05);
+        }
+    }
+}
