@@ -35,23 +35,24 @@ public class Wing extends Behavior {
         if (controller.controller != ViveInput.LEFT) {
             sideways = sideways.mul(-1);
         }
-        Vec3d pos = controller.pos(10).add(sideways);
+        Vec3d pos = controller.pos(5).add(sideways.mul(1.5));
 
         if (prevPos != null) {
             Vec3d motion = pos.sub(prevPos);
-            Vec3d wingUp = controller.controller.transform(new Vec3d(0, 0, 1));
-            double strength = -motion.dot(wingUp);
-            strength *= Math.abs(strength) / dt();
-            if (strength < 0) {
-                strength *= .75;
+            if (motion.lengthSquared() >= 1e-6) {
+                Vec3d wingUp = controller.controller.transform(new Vec3d(0, 0, 1));
+                double C = -motion.normalize().dot(wingUp);
+                if (C < 0) {
+                    C *= .5;
+                }
+                double strength = 10 * C * motion.lengthSquared() / dt();
+                controller.player.applyForce(wingUp.mul(strength), 0);
             }
-            strength *= 3;
-            controller.player.applyForce(wingUp.mul(strength), 0);
         }
         prevPos = pos;
 
         if (!controller.player.physics.onGround) {
-            double thrustStrength = 3;
+            double thrustStrength = 2;
             controller.player.applyForce(controller.controller.forwards().mul(thrustStrength), 0.05);
         }
     }
