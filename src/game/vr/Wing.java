@@ -43,9 +43,9 @@ public class Wing extends Behavior {
                 Vec3d wingUp = controller.controller.transform(new Vec3d(0, 0, 1));
                 double C = -motion.normalize().dot(wingUp);
                 if (C < 0) {
-                    C *= .5;
+                    C *= .2;
                 }
-                double strength = 10 * C * motion.lengthSquared() / dt();
+                double strength = 8 * C * motion.lengthSquared() / dt();
                 controller.player.applyForce(wingUp.mul(strength), 0);
             }
         }

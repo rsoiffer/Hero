@@ -39,13 +39,20 @@ public abstract class CommonPhysics {
         return minDist;
     }
 
+    public static Vec3d segmentPointClosest(Vec3d p1, Vec3d p2, Vec3d v) {
+        Vec3d dir = p2.sub(p1);
+        double t = dir.dot(v.sub(p1)) / dir.lengthSquared();
+        return p1.lerp(p2, clamp(t, 0, 1));
+    }
+
     public static double segmentPointDistance(Vec3d p1, Vec3d p2, Vec3d v) {
-        p2 = p2.sub(p1);
-        v = v.sub(p1);
-        double y = p2.dot(v) / p2.lengthSquared();
-        double x = v.sub(p2.mul(y)).length();
-        y = clamp(0, y - 1, y);
-        return Math.sqrt(x * x + y * y * p2.lengthSquared());
+        return segmentPointClosest(p1, p2, v).sub(v).length();
+//        p2 = p2.sub(p1);
+//        v = v.sub(p1);
+//        double y = p2.dot(v) / p2.lengthSquared();
+//        double x = v.sub(p2.mul(y)).length();
+//        y = clamp(0, y - 1, y);
+//        return Math.sqrt(x * x + y * y * p2.lengthSquared());
     }
 
     public static double segmentSegmentDistance(Vec3d p1, Vec3d p2, Vec3d p3, Vec3d p4) {

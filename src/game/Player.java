@@ -7,7 +7,6 @@ import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
 import graphics.Camera;
-import physics.AABB;
 import physics.PhysicsBehavior;
 import util.math.Vec3d;
 
@@ -45,7 +44,6 @@ public class Player extends Behavior {
     @Override
     public void createInner() {
         acceleration.acceleration = new Vec3d(0, 0, -10);
-        physics.hitbox = new AABB(new Vec3d(-1, -1, -1), new Vec3d(1, 1, 1));
     }
 
     @Override

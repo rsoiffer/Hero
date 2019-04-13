@@ -16,7 +16,7 @@ import java.util.Random;
 import physics.AABB;
 import physics.CapsuleShape;
 import physics.CollisionShape;
-import physics.CollisionShape.UnionShape;
+import physics.UnionShape;
 import util.Noise;
 import static util.math.MathUtils.floor;
 import util.math.Vec2d;

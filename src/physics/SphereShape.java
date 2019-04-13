@@ -18,17 +18,6 @@ public class SphereShape implements CollisionShape {
     }
 
     @Override
-    public boolean intersects(AABB aabb) {
-        Vec3d pos2 = pos.clamp(aabb.lower, aabb.upper);
-        return contains(pos2);
-    }
-
-    @Override
-    public boolean intersects(SphereShape sphere) {
-        return pos.sub(sphere.pos).length() < radius + sphere.radius;
-    }
-
-    @Override
     public double raycast(Vec3d start, Vec3d dir) {
         Vec3d diff = start.sub(pos);
         double a = dir.lengthSquared();
@@ -40,5 +29,10 @@ public class SphereShape implements CollisionShape {
         double t1 = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
         double t2 = (-b - Math.sqrt(b * b - 4 * a * c)) / (2 * a);
         return Math.max(0, Math.min(t1, t2));
+    }
+
+    @Override
+    public Vec3d surfaceClosest(Vec3d point) {
+        return pos.add(point.sub(pos).setLength(radius));
     }
 }

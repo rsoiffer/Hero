@@ -1,7 +1,9 @@
 package physics;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 import util.math.Vec3d;
 
 public class AABB implements CollisionShape {
@@ -39,18 +41,6 @@ public class AABB implements CollisionShape {
     }
 
     @Override
-    public boolean intersects(AABB other) {
-        return lower.x < other.upper.x && other.lower.x < upper.x
-                && lower.y < other.upper.y && other.lower.y < upper.y
-                && lower.z < other.upper.z && other.lower.z < upper.z;
-    }
-
-    @Override
-    public boolean intersects(SphereShape sphere) {
-        return sphere.intersects(this);
-    }
-
-    @Override
     public double raycast(Vec3d start, Vec3d dir) {
         Vec3d timeToLower = lower.sub(start).div(dir);
         Vec3d timeToUpper = upper.sub(start).div(dir);
@@ -58,17 +48,21 @@ public class AABB implements CollisionShape {
         return times.filter(d -> d >= 0).filter(d -> contains(start.add(dir.mul(d + .001)))).min().orElse(-1);
     }
 
-    public double raycastZ(Vec3d start, Vec3d dir) {
-        Vec3d timeToLower = lower.sub(start).div(dir);
-        Vec3d timeToUpper = upper.sub(start).div(dir);
-        DoubleStream times = DoubleStream.of(timeToLower.z, timeToUpper.z);
-        return times.filter(d -> d >= 0).filter(d
-                -> contains(start.add(dir.mul(d + .001))) || contains(start.add(dir.mul(d - .001)))
-        ).min().orElse(-1);
-    }
-
     public Vec3d size() {
         return upper.sub(lower);
+    }
+
+    @Override
+    public Vec3d surfaceClosest(Vec3d point) {
+        Vec3d pos2 = point.clamp(lower, upper);
+        if (!point.equals(pos2)) {
+            return pos2;
+        }
+        return Stream.of(
+                new Vec3d(lower.x - pos2.x, 0, 0), new Vec3d(upper.x - pos2.x, 0, 0),
+                new Vec3d(0, lower.y - pos2.y, 0), new Vec3d(0, upper.y - pos2.y, 0),
+                new Vec3d(0, 0, lower.z - pos2.z), new Vec3d(0, 0, upper.z - pos2.z)
+        ).min(Comparator.comparingDouble(v -> v.lengthSquared())).get().add(pos2);
     }
 
     @Override
