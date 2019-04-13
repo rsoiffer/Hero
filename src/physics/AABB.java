@@ -2,6 +2,7 @@ package physics;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import util.math.Vec3d;
@@ -41,11 +42,11 @@ public class AABB implements CollisionShape {
     }
 
     @Override
-    public double raycast(Vec3d start, Vec3d dir) {
+    public OptionalDouble raycast(Vec3d start, Vec3d dir) {
         Vec3d timeToLower = lower.sub(start).div(dir);
         Vec3d timeToUpper = upper.sub(start).div(dir);
         DoubleStream times = DoubleStream.of(timeToLower.x, timeToLower.y, timeToLower.z, timeToUpper.x, timeToUpper.y, timeToUpper.z);
-        return times.filter(d -> d >= 0).filter(d -> contains(start.add(dir.mul(d + .001)))).min().orElse(-1);
+        return times.filter(t -> t >= 0 && contains(start.add(dir.mul(t + 1e-6)))).min();
     }
 
     public Vec3d size() {

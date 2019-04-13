@@ -7,6 +7,7 @@ import game.RenderableBehavior;
 import static game.RenderableBehavior.createRB;
 import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
+import java.util.OptionalDouble;
 import util.math.Transformation;
 import util.math.Vec3d;
 import static vr.ViveInput.TRIGGER;
@@ -54,12 +55,12 @@ public class WebSlinger extends Behavior {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d start = controller.pos();
             Vec3d dir = controller.controller.forwards();
-            double t = controller.player.physics.world.collisionShape.raycast(start, dir);
-            if (t == -1) {
-                web = null;
+            OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
+            if (t.isPresent()) {
+                web = start.add(dir.mul(t.getAsDouble()));
+                prefLength = t.getAsDouble() - 4;
             } else {
-                web = start.add(dir.mul(t));
-                prefLength = t - 4;
+                web = null;
             }
         }
         if (controller.controller.buttonJustReleased(TRIGGER)) {

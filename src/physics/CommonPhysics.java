@@ -1,5 +1,6 @@
 package physics;
 
+import java.util.OptionalDouble;
 import static util.math.MathUtils.clamp;
 import static util.math.MathUtils.max;
 import util.math.Vec3d;
@@ -14,8 +15,8 @@ public abstract class CommonPhysics {
     }
 
     public static double segmentAABBDistance(Vec3d p1, Vec3d p2, AABB aabb) {
-        double t = aabb.raycast(p1, p2.sub(p1));
-        if (t > 0 && t < 1) {
+        OptionalDouble t = aabb.raycast(p1, p2.sub(p1));
+        if (t.isPresent() && t.getAsDouble() < 1) {
             return 0;
         }
         double minDist = Double.MAX_VALUE;

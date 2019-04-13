@@ -3,6 +3,7 @@ package physics;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import util.math.Vec3d;
 
@@ -25,9 +26,9 @@ public class UnionShape implements CollisionShape {
     }
 
     @Override
-    public double raycast(Vec3d start, Vec3d dir) {
-        return shapes.stream().mapToDouble(s -> s.raycast(start, dir))
-                .filter(d -> d >= 0).min().orElse(-1);
+    public OptionalDouble raycast(Vec3d start, Vec3d dir) {
+        return shapes.stream().map(s -> s.raycast(start, dir))
+                .filter(t -> t.isPresent()).mapToDouble(t -> t.getAsDouble()).min();
     }
 
     @Override

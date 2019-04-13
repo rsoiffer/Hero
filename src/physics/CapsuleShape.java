@@ -1,5 +1,6 @@
 package physics;
 
+import java.util.OptionalDouble;
 import util.math.Vec3d;
 
 public class CapsuleShape implements CollisionShape {
@@ -19,11 +20,16 @@ public class CapsuleShape implements CollisionShape {
     }
 
     @Override
-    public double raycast(Vec3d start, Vec3d dir2) {
+    public OptionalDouble raycast(Vec3d start, Vec3d dir2) {
         if (CommonPhysics.segmentSegmentDistance(pos, pos.add(dir), start, start.add(dir2.mul(1000))) > radius) {
-            return -1;
+            return OptionalDouble.empty();
         }
-        return 0;
+        double t = 0;
+        for (int i = 0; i < 10; i++) {
+            Vec3d v = surfaceClosest(start.add(dir2.mul(t)));
+            t += v.sub(start.add(dir2.mul(t))).length() / dir2.length();
+        }
+        return OptionalDouble.of(t);
     }
 
     @Override

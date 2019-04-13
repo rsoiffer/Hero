@@ -7,6 +7,7 @@ import game.RenderableBehavior;
 import static game.RenderableBehavior.createRB;
 import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
+import java.util.OptionalDouble;
 import util.math.Transformation;
 import util.math.Vec3d;
 import vr.EyeCamera;
@@ -34,9 +35,9 @@ public class Hand extends Behavior {
                 Vec3d dir = controller.controller.forwards();
 //                double t = controller.player.physics.world.buildings.stream().mapToDouble(a -> a.raycast(start, dir))
 //                        .filter(d -> d >= 0).min().orElse(-1);
-                double t = controller.player.physics.world.collisionShape.raycast(start, dir);
-                if (t != -1 && t <= 8) {
-                    v = start.add(dir.mul(t));
+                OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
+                if (t.isPresent() && t.getAsDouble() <= 8) {
+                    v = start.add(dir.mul(t.getAsDouble()));
                 }
             }
 
@@ -67,11 +68,11 @@ public class Hand extends Behavior {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d start = controller.pos();
             Vec3d dir = controller.controller.forwards();
-            double t = controller.player.physics.world.collisionShape.raycast(start, dir);
-            if (t == -1 || t > 8) {
-                handPos = null;
+            OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
+            if (t.isPresent() && t.getAsDouble() <= 8) {
+                handPos = start.add(dir.mul(t.getAsDouble()));
             } else {
-                handPos = start.add(dir.mul(t));
+                handPos = null;
             }
         }
         if (controller.controller.buttonJustReleased(TRIGGER) && handPos != null) {

@@ -2,6 +2,7 @@ package physics;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.OptionalDouble;
 import util.math.Vec3d;
 
 public interface CollisionShape {
@@ -20,7 +21,7 @@ public interface CollisionShape {
         return Arrays.asList(v);
     }
 
-    public double raycast(Vec3d start, Vec3d dir);
+    public OptionalDouble raycast(Vec3d start, Vec3d dir);
 
     public Vec3d surfaceClosest(Vec3d point);
 }

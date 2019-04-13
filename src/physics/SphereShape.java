@@ -1,5 +1,6 @@
 package physics;
 
+import java.util.OptionalDouble;
 import util.math.Vec3d;
 
 public class SphereShape implements CollisionShape {
@@ -18,17 +19,17 @@ public class SphereShape implements CollisionShape {
     }
 
     @Override
-    public double raycast(Vec3d start, Vec3d dir) {
+    public OptionalDouble raycast(Vec3d start, Vec3d dir) {
         Vec3d diff = start.sub(pos);
         double a = dir.lengthSquared();
         double b = 2 * diff.dot(dir);
-        double c = diff.lengthSquared();
+        double c = diff.lengthSquared() - radius * radius;
         if (b * b - 4 * a * c < 0) {
-            return -1;
+            return OptionalDouble.empty();
         }
         double t1 = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
         double t2 = (-b - Math.sqrt(b * b - 4 * a * c)) / (2 * a);
-        return Math.max(0, Math.min(t1, t2));
+        return OptionalDouble.of(Math.max(0, Math.min(t1, t2)));
     }
 
     @Override
