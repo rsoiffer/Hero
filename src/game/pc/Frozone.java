@@ -6,12 +6,12 @@ import engine.Input;
 import engine.Layer;
 import static engine.Layer.PREUPDATE;
 import game.Player;
+import static game.vr.IceCaster.iceModel;
 import static graphics.Camera.camera3d;
 import graphics.SDF;
 import static graphics.SDF.cylinder;
 import static graphics.SDF.halfSpace;
 import static graphics.SDF.intersectionSmooth;
-import graphics.models.SurfaceNet;
 import java.util.Arrays;
 import java.util.Random;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
@@ -27,7 +27,6 @@ public class Frozone extends Behavior {
     public final Player player = require(Player.class);
 
     public boolean fly = false;
-    public SurfaceNet iceModel;
     public double timer;
     public double timer2;
 

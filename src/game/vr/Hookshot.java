@@ -63,7 +63,7 @@ public class Hookshot extends Behavior {
         if (hookPos != null) {
             if (!grabbing) {
                 hookPos = hookPos.add(hookVel.mul(dt()));
-                grabbing = controller.player.physics.world.buildings.stream().anyMatch(b -> b.contains(hookPos));
+                grabbing = controller.player.physics.world.collisionShape.contains(hookPos);
             } else {
                 Vec3d pullDir = hookPos.sub(controller.pos()).normalize();
                 pullDir = pullDir.lerp(controller.controller.forwards(), .2);

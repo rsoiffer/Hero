@@ -90,6 +90,6 @@ public class PhysicsBehavior extends Behavior {
     }
 
     public boolean wouldCollideAt(Vec3d pos) {
-        return world.buildings.stream().anyMatch(b -> b.intersects(hitbox.translate(pos)));
+        return world.collisionShape.intersects(hitbox.translate(pos));
     }
 }

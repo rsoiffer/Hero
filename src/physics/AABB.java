@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.DoubleStream;
 import util.math.Vec3d;
 
-public class AABB {
+public class AABB implements CollisionShape {
 
     public final Vec3d lower, upper;
 
@@ -27,6 +27,7 @@ public class AABB {
         return lower.lerp(upper, .5);
     }
 
+    @Override
     public boolean contains(Vec3d point) {
         return lower.x < point.x && point.x < upper.x
                 && lower.y < point.y && point.y < upper.y
@@ -37,12 +38,19 @@ public class AABB {
         return new AABB(lower.sub(amt), upper.add(amt));
     }
 
+    @Override
     public boolean intersects(AABB other) {
         return lower.x < other.upper.x && other.lower.x < upper.x
                 && lower.y < other.upper.y && other.lower.y < upper.y
                 && lower.z < other.upper.z && other.lower.z < upper.z;
     }
 
+    @Override
+    public boolean intersects(SphereShape sphere) {
+        return sphere.intersects(this);
+    }
+
+    @Override
     public double raycast(Vec3d start, Vec3d dir) {
         Vec3d timeToLower = lower.sub(start).div(dir);
         Vec3d timeToUpper = upper.sub(start).div(dir);

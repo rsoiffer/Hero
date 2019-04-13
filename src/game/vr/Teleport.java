@@ -44,16 +44,14 @@ public class Teleport extends Behavior {
         Vec3d dir = controller.controller.forwards();
         for (int j = 0; j < 10; j++) {
             Vec3d dir2 = dir.add(new Vec3d(0, 0, -.01 * j)).normalize();
-            double tZ = controller.player.physics.world.buildings.stream()
-                    .map(b -> b.expand(1.05))
-                    .mapToDouble(b -> b.raycastZ(start, dir2))
-                    .filter(d -> d >= 0).min().orElse(-1);
-            double t = controller.player.physics.world.buildings.stream()
-                    .mapToDouble(b -> b.raycast(start, dir2))
-                    .filter(d -> d >= 0).min().orElse(-1);
-            if ((t == -1 || tZ < t) && tZ > 0 && tZ < 100) {
-                return start.add(dir2.mul(tZ));
-            }
+//            double tZ = controller.player.physics.world.buildings.stream()
+//                    .map(b -> b.expand(1.05))
+//                    .mapToDouble(b -> b.raycastZ(start, dir2))
+//                    .filter(d -> d >= 0).min().orElse(-1);
+//            double t = controller.player.physics.world.collisionShape.raycast(start, dir);
+//            if ((t == -1 || tZ < t) && tZ > 0 && tZ < 100) {
+//                return start.add(dir2.mul(tZ));
+//            }
         }
         return null;
     }

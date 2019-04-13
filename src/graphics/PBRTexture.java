@@ -2,28 +2,53 @@ package graphics;
 
 import graphics.opengl.GLObject;
 import graphics.opengl.Texture;
+import java.io.File;
 
 public class PBRTexture extends GLObject {
 
-    public static final PBRTexture DEFAULT = loadFromFolder("default");
+    private static final PBRTexture DEFAULT = loadFromFolder("default");
 
     private final Texture albedo, normal, metallic, roughness, ao, height;
 
     public PBRTexture(String albedoName, String normalName, String metallicName,
             String roughnessName, String aoName, String heightName) {
         super(0);
-        albedo = Texture.load(albedoName);
-        normal = Texture.load(normalName);
-        metallic = Texture.load(metallicName);
-        roughness = Texture.load(roughnessName);
-        ao = Texture.load(aoName);
-        height = Texture.load(heightName);
-        albedo.num = 0;
-        normal.num = 1;
-        metallic.num = 2;
-        roughness.num = 3;
-        ao.num = 4;
-        height.num = 5;
+        if (new File("sprites/" + albedoName).isFile()) {
+            albedo = Texture.load(albedoName);
+            albedo.num = 0;
+        } else {
+            albedo = DEFAULT.albedo;
+        }
+        if (new File("sprites/" + normalName).isFile()) {
+            normal = Texture.load(normalName);
+            normal.num = 1;
+        } else {
+            normal = DEFAULT.normal;
+        }
+        if (new File("sprites/" + metallicName).isFile()) {
+            metallic = Texture.load(metallicName);
+            metallic.num = 2;
+        } else {
+            metallic = DEFAULT.metallic;
+        }
+        if (new File("sprites/" + roughnessName).isFile()) {
+            roughness = Texture.load(roughnessName);
+            roughness.num = 3;
+        } else {
+            roughness = DEFAULT.roughness;
+        }
+        if (new File("sprites/" + aoName).isFile()) {
+            ao = Texture.load(aoName);
+            ao.num = 4;
+        } else {
+            ao = DEFAULT.ao;
+        }
+        if (new File("sprites/" + heightName).isFile()) {
+            height = Texture.load(heightName);
+            height.num = 5;
+        } else {
+            height = DEFAULT.height;
+        }
     }
 
     @Override
@@ -39,11 +64,6 @@ public class PBRTexture extends GLObject {
         roughness.destroy();
         ao.destroy();
         height.destroy();
-    }
-
-    public static PBRTexture loadAlbedo(String name) {
-        return new PBRTexture(name, "default/normal.png", "default/metallic.png",
-                "default/roughness.png", "default/ao.png", "default/height.png");
     }
 
     public static PBRTexture loadFromFolder(String name) {

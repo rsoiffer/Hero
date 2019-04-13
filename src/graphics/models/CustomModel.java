@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
+import util.math.MathUtils;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
@@ -18,6 +20,19 @@ public class CustomModel implements Model {
     private int numVertices;
     private BufferObject vbo;
     private VertexArrayObject vao;
+
+    private final Vec3d randomDir = MathUtils.randomInSphere(new Random());
+
+    public void addCylinder(Vec3d p, Vec3d dir, double radius, int detail, double texW, double texH0, double texH1) {
+        Vec3d dir1 = dir.cross(randomDir).normalize();
+        Vec3d dir2 = dir.cross(dir1).normalize();
+        for (int i = 0; i < detail; i++) {
+            double angle0 = i * 2 * Math.PI / detail, angle1 = (i + 1) * 2 * Math.PI / detail;
+            Vec3d v0 = p.add(dir1.mul(Math.cos(angle0) * radius)).add(dir2.mul(Math.sin(angle0) * radius));
+            Vec3d v1 = p.add(dir1.mul(Math.cos(angle1) * radius)).add(dir2.mul(Math.sin(angle1) * radius));
+            addRectangle(v0, v1.sub(v0), dir, new Vec2d(texW * i / detail, texH0), new Vec2d(texW / detail, 0), new Vec2d(0, texH1 - texH0));
+        }
+    }
 
     public void addRectangle(Vec3d p, Vec3d edge1, Vec3d edge2, Vec2d uv, Vec2d uvd1, Vec2d uvd2) {
         addTriangle(p, uv, p.add(edge1), uv.add(uvd1), p.add(edge1).add(edge2), uv.add(uvd1).add(uvd2));

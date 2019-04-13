@@ -32,8 +32,9 @@ public class Hand extends Behavior {
             if (v == null) {
                 Vec3d start = controller.pos();
                 Vec3d dir = controller.controller.forwards();
-                double t = controller.player.physics.world.buildings.stream().mapToDouble(a -> a.raycast(start, dir))
-                        .filter(d -> d >= 0).min().orElse(-1);
+//                double t = controller.player.physics.world.buildings.stream().mapToDouble(a -> a.raycast(start, dir))
+//                        .filter(d -> d >= 0).min().orElse(-1);
+                double t = controller.player.physics.world.collisionShape.raycast(start, dir);
                 if (t != -1 && t <= 8) {
                     v = start.add(dir.mul(t));
                 }
@@ -66,8 +67,7 @@ public class Hand extends Behavior {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d start = controller.pos();
             Vec3d dir = controller.controller.forwards();
-            double t = controller.player.physics.world.buildings.stream().mapToDouble(a -> a.raycast(start, dir))
-                    .filter(d -> d >= 0).min().orElse(-1);
+            double t = controller.player.physics.world.collisionShape.raycast(start, dir);
             if (t == -1 || t > 8) {
                 handPos = null;
             } else {
