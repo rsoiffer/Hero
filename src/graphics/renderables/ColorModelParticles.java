@@ -2,6 +2,7 @@ package graphics.renderables;
 
 import graphics.models.Model;
 import static graphics.passes.GeometryPass.SHADER_COLOR;
+import static graphics.passes.ShadowPass.SHADER_SHADOW;
 import java.util.LinkedList;
 import java.util.List;
 import util.math.Transformation;
@@ -35,6 +36,7 @@ public class ColorModelParticles extends Renderable {
     @Override
     public void renderShadow() {
         if (renderShadow) {
+            SHADER_SHADOW.bind();
             for (Transformation t : transforms) {
                 setTransform(t);
                 model.render();

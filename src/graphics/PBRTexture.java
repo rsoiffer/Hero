@@ -8,10 +8,10 @@ public class PBRTexture extends GLObject {
 
     private static final PBRTexture DEFAULT = loadFromFolder("default");
 
-    private final Texture albedo, normal, metallic, roughness, ao, height;
+    private final Texture albedo, normal, metallic, roughness, ao, height, alpha;
 
     public PBRTexture(String albedoName, String normalName, String metallicName,
-            String roughnessName, String aoName, String heightName) {
+            String roughnessName, String aoName, String heightName, String alphaName) {
         super(0);
         if (new File("sprites/" + albedoName).isFile()) {
             albedo = Texture.load(albedoName);
@@ -49,11 +49,17 @@ public class PBRTexture extends GLObject {
         } else {
             height = DEFAULT.height;
         }
+        if (new File("sprites/" + alphaName).isFile()) {
+            alpha = Texture.load(alphaName);
+            alpha.num = 6;
+        } else {
+            alpha = DEFAULT.alpha;
+        }
     }
 
     @Override
     public void bind() {
-        bindAll(albedo, normal, metallic, roughness, ao, height);
+        bindAll(albedo, normal, metallic, roughness, ao, height, alpha);
     }
 
     @Override
@@ -64,15 +70,20 @@ public class PBRTexture extends GLObject {
         roughness.destroy();
         ao.destroy();
         height.destroy();
+        alpha.destroy();
+    }
+
+    public boolean hasAlpha() {
+        return alpha != DEFAULT.alpha;
     }
 
     public static PBRTexture loadFromFolder(String name) {
         return new PBRTexture(name + "/albedo.png", name + "/normal.png", name + "/metallic.png",
-                name + "/roughness.png", name + "/ao.png", name + "/height.png");
+                name + "/roughness.png", name + "/ao.png", name + "/height.png", name + "/alpha.png");
     }
 
     public static PBRTexture loadFromFolder(String name, String ext) {
         return new PBRTexture(name + "/albedo." + ext, name + "/normal." + ext, name + "/metallic." + ext,
-                name + "/roughness." + ext, name + "/ao." + ext, name + "/height." + ext);
+                name + "/roughness." + ext, name + "/ao." + ext, name + "/height." + ext, name + "/alpha." + ext);
     }
 }

@@ -4,6 +4,8 @@ import graphics.PBRTexture;
 import graphics.models.Model;
 import static graphics.opengl.GLObject.bindAll;
 import static graphics.passes.GeometryPass.SHADER_PBR;
+import static graphics.passes.ShadowPass.SHADER_SHADOW;
+import static graphics.passes.ShadowPass.SHADER_SHADOW_ALPHA;
 import util.math.Transformation;
 
 public class PBRModel extends Renderable {
@@ -26,6 +28,7 @@ public class PBRModel extends Renderable {
 
     @Override
     public void renderShadow() {
+        bindAll(tex.hasAlpha() ? SHADER_SHADOW_ALPHA : SHADER_SHADOW, tex);
         setTransform(t);
         model.render();
     }

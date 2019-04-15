@@ -7,12 +7,17 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import util.math.Vec3d;
 
-public class UnionShape implements CollisionShape {
+public class UnionShape extends CollisionShape {
 
     private final Collection<CollisionShape> shapes;
 
     public UnionShape(Collection<CollisionShape> shapes) {
         this.shapes = shapes;
+    }
+
+    @Override
+    public AABB boundingBox() {
+        return null;
     }
 
     @Override
@@ -33,7 +38,7 @@ public class UnionShape implements CollisionShape {
 
     @Override
     public Vec3d surfaceClosest(Vec3d point) {
-        return shapes.stream().map(s -> s.surfaceClosest(point))
+        return shapes.stream().map(s -> s.surfaceClosest(point)).filter(p -> p != null)
                 .min(Comparator.comparingDouble(v -> v.sub(point).lengthSquared())).get();
     }
 }

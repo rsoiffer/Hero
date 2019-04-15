@@ -62,6 +62,10 @@ public class CustomModel implements Model {
         vao = Vertex.createVAO(vbo, new int[]{3, 2, 3, 3, 3});
     }
 
+    public int numTriangles() {
+        return numVertices / 3;
+    }
+
     @Override
     public void render() {
         vao.bind();

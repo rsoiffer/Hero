@@ -18,6 +18,7 @@ uniform sampler2D metallicMap;
 uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 uniform sampler2D heightMap;
+uniform sampler2D alphaMap;
 
 uniform vec3 camPos;
 
@@ -69,6 +70,10 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 N, vec3 viewDir)
 // ----------------------------------------------------------------------------
 void main()
 {
+    if (texture(alphaMap, TexCoords).r < .5) {
+        discard;
+    }
+
     vec3 T = normalize(Tangent);
     vec3 N = normalize(Normal);
     T = normalize(T - dot(T, N) * N);

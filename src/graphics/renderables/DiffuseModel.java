@@ -4,6 +4,7 @@ import graphics.models.Model;
 import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.Texture;
 import static graphics.passes.GeometryPass.SHADER_DIFFUSE;
+import static graphics.passes.ShadowPass.SHADER_SHADOW;
 import util.math.Transformation;
 
 public class DiffuseModel extends Renderable {
@@ -30,6 +31,7 @@ public class DiffuseModel extends Renderable {
 
     @Override
     public void renderShadow() {
+        SHADER_SHADOW.bind();
         setTransform(t);
         model.render();
     }

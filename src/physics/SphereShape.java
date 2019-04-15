@@ -3,7 +3,7 @@ package physics;
 import java.util.OptionalDouble;
 import util.math.Vec3d;
 
-public class SphereShape implements CollisionShape {
+public class SphereShape extends CollisionShape {
 
     public final Vec3d pos;
     public final double radius;
@@ -11,6 +11,11 @@ public class SphereShape implements CollisionShape {
     public SphereShape(Vec3d pos, double radius) {
         this.pos = pos;
         this.radius = radius;
+    }
+
+    @Override
+    public AABB boundingBox() {
+        return new AABB(pos.sub(radius), pos.add(radius));
     }
 
     @Override

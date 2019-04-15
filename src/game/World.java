@@ -1,6 +1,9 @@
 package game;
 
 import engine.Behavior;
+import static game.TreeBranch.collisionShapes;
+import static game.TreeBranch.createBranchRenderable;
+import static game.vr.IceCaster.iceModel;
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
 import graphics.opengl.Texture;
@@ -14,9 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import physics.AABB;
-import physics.CapsuleShape;
 import physics.CollisionShape;
-import physics.UnionShape;
+import physics.MultigridShape;
+import physics.SurfaceNetShape;
 import util.Noise;
 import static util.math.MathUtils.floor;
 import util.math.Vec2d;
@@ -39,13 +42,15 @@ public class World extends Behavior {
     public final RenderableBehavior renderable = require(RenderableBehavior.class);
 
     public CollisionShape collisionShape;
-    private List<AABB> buildings = new ArrayList();
-    private List<Vec3d> trees = new ArrayList();
-    private List<CapsuleShape> branches = new ArrayList();
+    private final List<AABB> buildings = new ArrayList();
+//    private final List<Vec3d> trees = new ArrayList();
+//    private final List<CapsuleShape> branches = new ArrayList();
+    private final List<TreeBranch> trees = new ArrayList();
+    private final Random random = new Random();
 
     @Override
     public void createInner() {
-        Noise heightNoise = new Noise(new Random());
+        Noise heightNoise = new Noise(random);
         for (int i = 0; i < 2000; i += BLOCK_WIDTH) {
             for (int j = 0; j < 2000; j += BLOCK_HEIGHT) {
                 for (int k = 0; k < 200; k++) {
@@ -62,30 +67,37 @@ public class World extends Behavior {
             }
         }
 
+//        for (int k = 0; k < 200; k++) {
+//            double x = Math.random() * 2000;
+//            double y = Math.random() * 2000;
+//            double height = Math.random() * 120 + 40;
+//            trees.add(new Vec3d(x, y, height));
+//
+//            for (int i = 0; i < 16; i++) {
+//                double radius = 1 + Math.random();
+//                double angle = Math.random() * 2 * Math.PI;
+//                Vec3d dir = new Vec3d(Math.cos(angle), Math.sin(angle), 0);
+//                Vec3d pos = new Vec3d(x, y, Math.random() * height).add(dir.mul(5.5));
+//                dir = dir.mul(8 + Math.random() * 2);
+//                for (int j = 0; j < 3; j++) {
+//                    branches.add(new CapsuleShape(pos, dir, radius));
+//                    pos = pos.add(dir);
+//                    dir = dir.add(MathUtils.randomInSphere(random).mul(5));
+//                    radius = radius * (.8 + Math.random() * .2);
+//                }
+//            }
+//        }
         for (int k = 0; k < 1000; k++) {
             double x = Math.random() * 2000;
             double y = Math.random() * 2000;
-            double height = Math.random() * 120 + 40;
-            trees.add(new Vec3d(x, y, height));
-
-            for (int i = 0; i < 16; i++) {
-                double radius = 1 + Math.random();
-                double angle = Math.random() * 2 * Math.PI;
-                double length = 10 + Math.random() * 30;
-                Vec3d dir = new Vec3d(Math.cos(angle), Math.sin(angle), 0);
-                branches.add(new CapsuleShape(
-                        new Vec3d(x, y, Math.random() * height).add(dir.mul(5.5)),
-                        dir.mul(length), radius));
-            }
+            trees.add(TreeBranch.generateTree(new Vec3d(x, y, 0)));
         }
 
         List<CollisionShape> l = new LinkedList();
         l.addAll(buildings);
-        for (Vec3d v : trees) {
-            l.add(new CapsuleShape(v.setZ(0), new Vec3d(0, 0, v.z), 6));
-        }
-        l.addAll(branches);
-        collisionShape = new UnionShape(l);
+        l.addAll(collisionShapes(trees));
+        l.add(new SurfaceNetShape(iceModel));
+        collisionShape = new MultigridShape(l);
 
         renderable.renderable = createRenderable();
     }
@@ -129,24 +141,6 @@ public class World extends Behavior {
             walls[i].createVAO();
         }
 
-        CustomModel treesModel = new CustomModel();
-        double texWScale = 2;
-        double texHScale = 4;
-        for (Vec3d v : trees) {
-            for (int i = 0; i < 4; i++) {
-                double radius = 6.0;
-                int detail = 32;
-                treesModel.addCylinder(v.setZ(v.z * i / 4), new Vec3d(0, 0, v.z / 4), radius, detail,
-                        floor(2 * Math.PI * radius / texWScale), v.z * i / 4 / texHScale, v.z * (i + 1) / 4 / texHScale);
-            }
-        }
-        for (CapsuleShape c : branches) {
-            treesModel.addCylinder(c.pos, c.dir, c.radius, 12,
-                    floor(2 * Math.PI * c.radius / texWScale), 0, c.dir.length() / texHScale);
-        }
-        treesModel.smoothVertexNormals();
-        treesModel.createVAO();
-
         List<Renderable> parts = new LinkedList();
         parts.add(new PBRModel(ground, PBRTexture.loadFromFolder("sidewalk")));
         parts.add(new PBRModel(roofs, PBRTexture.loadFromFolder("concrete_floor")));
@@ -157,7 +151,8 @@ public class World extends Behavior {
                 parts.add(new PBRModel(walls[i], PBRTexture.loadFromFolder(WALL_PBR_TEXTURES[i - WALL_TEXTURES.length])));
             }
         }
-        parts.add(new PBRModel(treesModel, PBRTexture.loadFromFolder("bark")));
+        parts.add(createBranchRenderable(trees));
+//        parts.add(createLeafRenderable(trees));
         return new RenderableList(parts);
     }
 

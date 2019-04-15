@@ -7,7 +7,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import util.math.Vec3d;
 
-public class AABB implements CollisionShape {
+public class AABB extends CollisionShape {
 
     public final Vec3d lower, upper;
 
@@ -24,6 +24,11 @@ public class AABB implements CollisionShape {
             upper = new Vec3d(Math.max(p.x, upper.x), Math.max(p.y, upper.y), Math.max(p.z, upper.z));
         }
         return new AABB(lower, upper);
+    }
+
+    @Override
+    public AABB boundingBox() {
+        return this;
     }
 
     public Vec3d center() {

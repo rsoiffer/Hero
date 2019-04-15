@@ -36,7 +36,12 @@ import util.math.Vec3d;
 
 public class ShadowPass implements Runnable {
 
-    private static final Shader SHADER_SHADOW = Shader.load("shadow_pass");
+    public static final Shader SHADER_SHADOW = Shader.load("shadow_pass");
+    public static final Shader SHADER_SHADOW_ALPHA = Shader.load("shadow_pass_alpha");
+
+    static {
+        SHADER_SHADOW_ALPHA.setUniform("alphaMap", 6);
+    }
 
     public List<Camera> cameras;
     public double zMin = -1, zMax = 1;
@@ -99,6 +104,7 @@ public class ShadowPass implements Runnable {
     public void run() {
         Camera.current = sunCam;
         SHADER_SHADOW.setMVP(Transformation.IDENTITY);
+        SHADER_SHADOW_ALPHA.setMVP(Transformation.IDENTITY);
         shadowMap.bind();
         GLState.enable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);

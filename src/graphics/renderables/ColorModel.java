@@ -2,6 +2,7 @@ package graphics.renderables;
 
 import graphics.models.Model;
 import static graphics.passes.GeometryPass.SHADER_COLOR;
+import static graphics.passes.ShadowPass.SHADER_SHADOW;
 import util.math.Transformation;
 import util.math.Vec3d;
 
@@ -29,6 +30,7 @@ public class ColorModel extends Renderable {
 
     @Override
     public void renderShadow() {
+        SHADER_SHADOW.bind();
         setTransform(t);
         model.render();
     }

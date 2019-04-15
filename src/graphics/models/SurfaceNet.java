@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import physics.AABB;
 import static util.math.MathUtils.ceil;
 import static util.math.MathUtils.clamp;
@@ -20,16 +21,44 @@ public class SurfaceNet implements Model {
     private static final int SUBNET_SIZE = 32;
     private static final int SUBNET_OVERLAP = 2;
 
-    private final double scale;
+    public final double scale;
     private final HashMap<Vec3d, Subnet> subnets = new HashMap();
 
     public SurfaceNet(double scale) {
         this.scale = scale;
     }
 
-    private double get(int x, int y, int z) {
+    public Stream<Vec3d> crossingsNear(Vec3d v, double d) {
+        v = v.div(scale);
+        Set<Subnet> s = new HashSet();
+        for (int x = -1; x <= 1; x += 2) {
+            for (int y = -1; y <= 1; y += 2) {
+                for (int z = -1; z <= 1; z += 2) {
+                    s.add(getSubnet(v.add(new Vec3d(x, y, z).mul(d))));
+                }
+            }
+        }
+        return s.stream().flatMap(sn -> sn.surfaceEdges.stream().map(e -> e.crossing()));
+    }
+
+    public double get(int x, int y, int z) {
         Subnet s = subnets.get(new Vec3d(x, y, z).div(SUBNET_SIZE).floor());
         return s == null ? MIN : s.data[mod(x, SUBNET_SIZE)][mod(y, SUBNET_SIZE)][mod(z, SUBNET_SIZE)];
+    }
+
+    public double getInterp(Vec3d v) {
+        v = v.div(scale);
+        double r = 0;
+        for (int x = 0; x < 2; x++) {
+            for (int y = 0; y < 2; y++) {
+                for (int z = 0; z < 2; z++) {
+                    double d = get(floor(v.x + x), floor(v.y + y), floor(v.z + z));
+                    Vec3d v2 = v.sub(v.add(new Vec3d(x, y, z)).floor());
+                    r += d * Math.abs(v2.x) * Math.abs(v2.y) * Math.abs(v2.z);
+                }
+            }
+        }
+        return r;
     }
 
     private Subnet getSubnet(Vec3d v) {
@@ -247,6 +276,10 @@ public class SurfaceNet implements Model {
                         model.addTriangle(p.get(3), new Vec2d(1, 1), p.get(1), new Vec2d(0, 1), p.get(2), new Vec2d(1, 0));
                     }
                 }
+            }
+
+            public Vec3d crossing() {
+                return new Vec3d(x0, y0, z0).lerp(new Vec3d(x1, y1, z1), (BOUNDARY - d0) / (d1 - d0)).add(subnetPos).mul(scale);
             }
 
             @Override

@@ -1,9 +1,10 @@
 package physics;
 
+import java.util.Arrays;
 import java.util.OptionalDouble;
 import util.math.Vec3d;
 
-public class CapsuleShape implements CollisionShape {
+public class CapsuleShape extends CollisionShape {
 
     public final Vec3d pos, dir;
     public final double radius;
@@ -12,6 +13,11 @@ public class CapsuleShape implements CollisionShape {
         this.pos = pos;
         this.dir = dir;
         this.radius = radius;
+    }
+
+    @Override
+    public AABB boundingBox() {
+        return AABB.boundingBox(Arrays.asList(pos, pos.add(dir))).expand(radius);
     }
 
     @Override

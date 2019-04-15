@@ -37,6 +37,7 @@ public class GeometryPass implements Runnable {
         SHADER_PBR.setUniform("roughnessMap", 3);
         SHADER_PBR.setUniform("aoMap", 4);
         SHADER_PBR.setUniform("heightMap", 5);
+        SHADER_PBR.setUniform("alphaMap", 6);
     }
 
     public Camera camera;

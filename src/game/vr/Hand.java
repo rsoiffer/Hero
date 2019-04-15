@@ -1,6 +1,7 @@
 package game.vr;
 
 import engine.Behavior;
+import static engine.Core.dt;
 import engine.Layer;
 import static game.Player.POSTPHYSICS;
 import game.RenderableBehavior;
@@ -81,7 +82,8 @@ public class Hand extends Behavior {
         }
         if (handPos != null) {
             Vec3d dir = handPos.sub(controller.player.position.position).normalize();
-            controller.player.velocity.velocity = dir.mul(30);
+            controller.player.velocity.velocity = controller.player.velocity.velocity
+                    .lerp(dir.mul(30), 1 - Math.pow(1e-4, dt()));
         } else if (!controller.player.physics.onGround) {
             controller.player.applyForce(EyeCamera.headTransform(new Vec3d(1, 0, 0)).mul(3), .05);
         }
