@@ -90,7 +90,7 @@ public class World extends Behavior {
 //                }
 //            }
 //        }
-        for (int k = 0; k < 100; k++) {
+        for (int k = 0; k < 200; k++) {
             double x = Math.random() * 2000;
             double y = Math.random() * 2000;
             trees.put(TreeBranch.generateTree(), new Vec3d(x, y, 0));

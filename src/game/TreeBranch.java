@@ -2,7 +2,7 @@ package game;
 
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
-import graphics.models.ModelSimplifier;
+import graphics.models.ModelSimplifier2;
 import graphics.renderables.PBRModel;
 import graphics.renderables.Renderable;
 import java.util.ArrayList;
@@ -131,9 +131,13 @@ public class TreeBranch {
 //        treesModel.createVAO();
 //        System.out.println(treesModel.numTriangles());
 
-        CustomModel treesModel2 = ModelSimplifier.simplify(treesModel);
+//        CustomModel treesModel2 = ModelSimplifier.simplify(treesModel);
+//        treesModel2.createVAO();
+//        System.out.println(treesModel2.numTriangles());
+        ModelSimplifier2 ms = new ModelSimplifier2(treesModel);
+        ms.simplify(.9);
+        CustomModel treesModel2 = ms.toModel();
         treesModel2.createVAO();
-        System.out.println(treesModel2.numTriangles());
 
         PBRModel m = new PBRModel(treesModel2, bark);
         m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
