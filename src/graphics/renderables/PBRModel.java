@@ -28,7 +28,11 @@ public class PBRModel extends Renderable {
 
     @Override
     public void renderShadow() {
-        bindAll(tex.hasAlpha() ? SHADER_SHADOW_ALPHA : SHADER_SHADOW, tex);
+        if (tex.hasAlpha()) {
+            bindAll(SHADER_SHADOW_ALPHA, tex);
+        } else {
+            bindAll(SHADER_SHADOW);
+        }
         setTransform(t);
         model.render();
     }

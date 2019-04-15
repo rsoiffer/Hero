@@ -2,11 +2,13 @@ package game;
 
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
+import graphics.models.ModelSimplifier;
 import graphics.renderables.PBRModel;
 import graphics.renderables.Renderable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,10 +17,15 @@ import physics.CollisionShape;
 import util.Mutable;
 import util.math.MathUtils;
 import static util.math.MathUtils.floor;
+import util.math.Quaternion;
+import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
 public class TreeBranch {
+
+    private static final PBRTexture bark = PBRTexture.loadFromFolder("bark");
+    private static final PBRTexture leaf = PBRTexture.loadFromFolder("leaf");
 
     // Generation
     private static TreeBranch genBranch(Vec3d pos, Vec3d dir, int level, int segment, boolean root) {
@@ -47,8 +54,8 @@ public class TreeBranch {
         return b;
     }
 
-    public static TreeBranch generateTree(Vec3d pos) {
-        return genBranch(pos, new Vec3d(0, 0, 20), 0, 0, true);
+    public static TreeBranch generateTree() {
+        return genBranch(new Vec3d(0, 0, 0), new Vec3d(0, 0, 20), 0, 0, true);
     }
 
     private static double length(int level) {
@@ -94,35 +101,43 @@ public class TreeBranch {
         }
     }
 
-    public static List<CollisionShape> collisionShapes(List<TreeBranch> trees) {
-        return trees.stream().flatMap(t -> t.partsRecursive(2).map(p -> p.collisionShape())).collect(Collectors.toList());
+    public static List<CollisionShape> collisionShapes(Map<TreeBranch, Vec3d> trees) {
+        return trees.entrySet().stream().flatMap(e -> e.getKey().partsRecursive(2)
+                .map(p -> p.collisionShape(e.getValue()))).collect(Collectors.toList());
     }
 
-    public static Renderable createBranchRenderable(List<TreeBranch> trees) {
+    public static Renderable createBranchRenderable(TreeBranch tree, Vec3d pos) {
         CustomModel treesModel = new CustomModel();
-        for (TreeBranch tree : trees) {
-            tree.partsRecursive().filter(tb -> tb.root).forEach(tb -> {
-                List<Vec3d> branch = new ArrayList();
-                List<Double> radii = new ArrayList();
-                int detail = 12 / (tb.level + 1);
-                while (tb != null) {
-                    branch.add(tb.pos);
-                    radii.add(tb.radius);
-                    if (tb.next == null) {
-                        branch.add(tb.pos.add(tb.dir));
-                        radii.add(tb.radius * .6);
-                        branch.add(tb.pos.add(tb.dir.mul(1.01)));
-                        radii.add(0.01);
-                    }
-                    tb = tb.next;
+        // for (TreeBranch tree : trees) {
+        tree.partsRecursive().filter(tb -> tb.root).forEach(tb -> {
+            List<Vec3d> branch = new ArrayList();
+            List<Double> radii = new ArrayList();
+            int detail = 12 / (tb.level + 1);
+            while (tb != null) {
+                branch.add(tb.pos);
+                radii.add(tb.radius);
+                if (tb.next == null) {
+                    branch.add(tb.pos.add(tb.dir));
+                    radii.add(tb.radius * .6);
+                    branch.add(tb.pos.add(tb.dir.mul(1.01)));
+                    radii.add(0.01);
                 }
-                addBranchToModel(branch, radii, detail, treesModel);
-            });
-        }
+                tb = tb.next;
+            }
+            addBranchToModel(branch, radii, detail, treesModel);
+        });
+        // }
         treesModel.smoothVertexNormals();
-        treesModel.createVAO();
-        System.out.println(treesModel.numTriangles());
-        return new PBRModel(treesModel, PBRTexture.loadFromFolder("bark"));
+//        treesModel.createVAO();
+//        System.out.println(treesModel.numTriangles());
+
+        CustomModel treesModel2 = ModelSimplifier.simplify(treesModel);
+        treesModel2.createVAO();
+        System.out.println(treesModel2.numTriangles());
+
+        PBRModel m = new PBRModel(treesModel2, bark);
+        m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
+        return m;
     }
 
     public static Renderable createLeafRenderable(List<TreeBranch> trees) {
@@ -143,7 +158,7 @@ public class TreeBranch {
         }
         leavesModel.createVAO();
         System.out.println(leavesModel.numTriangles());
-        return new PBRModel(leavesModel, PBRTexture.loadFromFolder("leaf"));
+        return new PBRModel(leavesModel, leaf);
     }
 
     // Instances
@@ -162,8 +177,8 @@ public class TreeBranch {
         this.root = root;
     }
 
-    private CapsuleShape collisionShape() {
-        return new CapsuleShape(pos, dir, radius);
+    private CapsuleShape collisionShape(Vec3d t) {
+        return new CapsuleShape(pos.add(t), dir, radius);
     }
 
     private Stream<TreeBranch> partsRecursive() {

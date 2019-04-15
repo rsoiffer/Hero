@@ -16,7 +16,7 @@ import util.math.Vec3d;
 
 public class CustomModel implements Model {
 
-    private final List<VertexPBR> vertices = new ArrayList();
+    final List<VertexPBR> vertices = new ArrayList();
     private int numVertices;
     private BufferObject vbo;
     private VertexArrayObject vao;
@@ -54,6 +54,12 @@ public class CustomModel implements Model {
 
     public void clear() {
         vertices.clear();
+    }
+
+    public CustomModel copy() {
+        CustomModel m = new CustomModel();
+        m.vertices.addAll(vertices);
+        return m;
     }
 
     public void createVAO() {

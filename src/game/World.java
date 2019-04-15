@@ -13,8 +13,11 @@ import graphics.renderables.Renderable;
 import graphics.renderables.RenderableList;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import physics.AABB;
 import physics.CollisionShape;
@@ -45,7 +48,7 @@ public class World extends Behavior {
     private final List<AABB> buildings = new ArrayList();
 //    private final List<Vec3d> trees = new ArrayList();
 //    private final List<CapsuleShape> branches = new ArrayList();
-    private final List<TreeBranch> trees = new ArrayList();
+    private final Map<TreeBranch, Vec3d> trees = new HashMap();
     private final Random random = new Random();
 
     @Override
@@ -87,10 +90,10 @@ public class World extends Behavior {
 //                }
 //            }
 //        }
-        for (int k = 0; k < 1000; k++) {
+        for (int k = 0; k < 100; k++) {
             double x = Math.random() * 2000;
             double y = Math.random() * 2000;
-            trees.add(TreeBranch.generateTree(new Vec3d(x, y, 0)));
+            trees.put(TreeBranch.generateTree(), new Vec3d(x, y, 0));
         }
 
         List<CollisionShape> l = new LinkedList();
@@ -151,7 +154,10 @@ public class World extends Behavior {
                 parts.add(new PBRModel(walls[i], PBRTexture.loadFromFolder(WALL_PBR_TEXTURES[i - WALL_TEXTURES.length])));
             }
         }
-        parts.add(createBranchRenderable(trees));
+//        parts.add(createBranchRenderable(trees));
+        for (Entry<TreeBranch, Vec3d> e : trees.entrySet()) {
+            parts.add(createBranchRenderable(e.getKey(), e.getValue()));
+        }
 //        parts.add(createLeafRenderable(trees));
         return new RenderableList(parts);
     }
