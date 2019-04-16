@@ -42,7 +42,7 @@ public class IceCaster extends Behavior {
         SDF shape2 = intersectionSmooth(3,
                 cylinder(pos1, dir, negRadius),
                 halfSpace(pos1, dir),
-                halfSpace(pos2, dir.mul(-1))).invert();
+                halfSpace(pos2.add(dir.setLength(1)), dir.mul(-1))).invert();
         AABB bounds2 = AABB.boundingBox(Arrays.asList(pos1.sub(negRadius), pos1.add(negRadius), pos2.sub(negRadius), pos2.add(negRadius)));
         iceModel.intersectionSDF(shape2, bounds2);
 

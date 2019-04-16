@@ -51,7 +51,9 @@ public class AABB extends CollisionShape {
         Vec3d timeToLower = lower.sub(start).div(dir);
         Vec3d timeToUpper = upper.sub(start).div(dir);
         DoubleStream times = DoubleStream.of(timeToLower.x, timeToLower.y, timeToLower.z, timeToUpper.x, timeToUpper.y, timeToUpper.z);
-        return times.filter(t -> t >= 0 && contains(start.add(dir.mul(t + 1e-6)))).min();
+        return times.filter(t -> t >= 0
+                && (contains(start.add(dir.mul(t + 1e-6))) || contains(start.add(dir.mul(t - 1e-6))))
+        ).min();
     }
 
     public Vec3d size() {

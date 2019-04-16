@@ -94,7 +94,38 @@ public class MultigridShape extends CollisionShape {
 
     @Override
     public OptionalDouble raycast(Vec3d start, Vec3d dir) {
-        return OptionalDouble.empty();
+        List<Double> collisions = new LinkedList();
+        for (CollisionShape s : globals) {
+            OptionalDouble t2 = s.raycast(start, dir);
+            if (t2.isPresent()) {
+                collisions.add(t2.getAsDouble());
+            }
+        }
+
+        double t = 0;
+        for (int j = 0; j < 50; j++) {
+            Vec3d pos = start.add(dir.mul(t));
+            boolean end = false;
+            for (int i = 0; i < layers.length; i++) {
+                List<CollisionShape> l = layers[i].get(pos.div(SIZES[i]).floor());
+                if (l != null) {
+                    for (CollisionShape s : l) {
+                        OptionalDouble t2 = s.raycast(start, dir);
+                        if (t2.isPresent()) {
+                            collisions.add(t2.getAsDouble());
+                            end = true;
+                        }
+                    }
+                }
+            }
+            if (end) {
+                break;
+            }
+            AABB bounds = new AABB(pos.div(SIZES[0]).floor().mul(SIZES[0]), pos.div(SIZES[0]).floor().add(1).mul(SIZES[0]));
+            OptionalDouble t2 = bounds.raycast(pos, dir);
+            t += t2.getAsDouble() + 1e-3;
+        }
+        return collisions.stream().mapToDouble(d -> d).min();
     }
 
     @Override
