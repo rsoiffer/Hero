@@ -10,7 +10,6 @@ import game.Player;
 import game.World;
 import static game.World.BLOCK_HEIGHT;
 import static game.World.BLOCK_WIDTH;
-import game.pc.Frozone;
 import graphics.Camera;
 import graphics.passes.RenderPipeline;
 import util.Mutable;
@@ -23,6 +22,7 @@ import static vr.ViveInput.MENU;
 public class MainVR {
 
     public static void main(String[] args) {
+        Settings.SHOW_OPENGL_DEBUG_INFO = false;
         Settings.ENABLE_VSYNC = false;
         Core.init();
 
@@ -48,13 +48,12 @@ public class MainVR {
         p.cameraOffset = new Vec3d(0, 0, -1);
         p.create();
 
-        Frozone f2 = new Frozone();
-        f2.player.position.position = new Vec3d(7 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
-        f2.player.physics.world = world;
-        f2.player.cameraOffset = null;
-        f2.isPlayer = false;
-        f2.create();
-
+//        Frozone f2 = new Frozone();
+//        f2.player.position.position = new Vec3d(7 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
+//        f2.player.physics.world = world;
+//        f2.player.cameraOffset = null;
+//        f2.isPlayer = false;
+//        f2.create();
         Class[] c = {WebSlinger.class, Thruster.class, Hookshot.class, IceCaster.class,
             Wing.class, Hand.class, Explosion.class, Teleport.class};
         Mutable<Integer> leftType = new Mutable(0);

@@ -36,7 +36,8 @@ public class TreeGenerator {
 
     public List<Renderable> renderables() {
         return treePlacements.entrySet().stream().flatMap(e -> Stream.of(
-                e.getValue().getRenderable(e.getKey()), e.getValue().getLeafRenderable(e.getKey())))
+                //e.getValue().getRenderable(e.getKey()),e.getValue().getLeafRenderable(e.getKey())))
+                e.getValue().getRenderable(e.getKey())))
                 .collect(Collectors.toList());
     }
 }

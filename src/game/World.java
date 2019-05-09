@@ -65,7 +65,7 @@ public class World extends Behavior {
         }
 
         trees.generateInstances(32);
-        for (int k = 0; k < 2000; k++) {
+        for (int k = 0; k < 1000; k++) {
             double x = Math.random() * 2000;
             double y = Math.random() * 2000;
             trees.placeTree(new Vec3d(x, y, 0));
