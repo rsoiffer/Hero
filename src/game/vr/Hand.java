@@ -16,6 +16,8 @@ import static vr.ViveInput.TRIGGER;
 
 public class Hand extends Behavior {
 
+    private static double jumpTimer = 0;
+
     public final ControllerBehavior controller = require(ControllerBehavior.class);
 
     public Vec3d handPos;
@@ -78,12 +80,18 @@ public class Hand extends Behavior {
         }
         if (controller.controller.buttonJustReleased(TRIGGER) && handPos != null) {
             handPos = null;
-            controller.player.velocity.velocity = EyeCamera.headTransform(new Vec3d(1, 0, .5)).mul(25);
+            if (jumpTimer > 0) {
+                controller.player.velocity.velocity = EyeCamera.headTransform(new Vec3d(1, 0, .5)).mul(25);
+                jumpTimer = 0;
+            } else {
+                jumpTimer = .2;
+            }
         }
         if (handPos != null) {
+            jumpTimer -= dt();
             Vec3d dir = handPos.sub(controller.player.position.position).normalize();
             controller.player.velocity.velocity = controller.player.velocity.velocity
-                    .lerp(dir.mul(30), 1 - Math.pow(1e-4, dt()));
+                    .lerp(dir.mul(20), 1 - Math.pow(1e-6, dt()));
         } else if (!controller.player.physics.onGround) {
             controller.player.applyForce(EyeCamera.headTransform(new Vec3d(1, 0, 0)).mul(3), .05);
         }
