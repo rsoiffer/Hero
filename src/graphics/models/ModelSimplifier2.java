@@ -1,15 +1,17 @@
 package graphics.models;
 
 import graphics.models.Vertex.VertexPBR;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.joml.Matrix4d;
 import org.joml.Vector4d;
 import util.math.Vec3d;
@@ -86,41 +88,50 @@ public class ModelSimplifier2 {
                 e.v1.v.normal.lerp(e.v2.v.normal, .5),
                 e.v1.v.tangent.lerp(e.v2.v.tangent, .5),
                 e.v1.v.bitangent.lerp(e.v2.v.bitangent, .5));
-        for (Edge e2 : e.v2.edges) {
+
+        for (Edge e2 : new LinkedList<>(e.v2.edges)) {
             e2.replace(e.v2, e.v1);
         }
-        Map<Edge, Edge> v1Edges = new HashMap();
-        for (Edge e2 : e.v1.edges) {
+
+        Map<Vertex, Edge> v1Edges = new HashMap();
+        for (Edge e2 : new LinkedList<>(e.v1.edges)) {
             if (!e2.degenerate) {
-                if (v1Edges.containsKey(e2)) {
-                    Edge e3 = v1Edges.get(e2);
-                    if (e2 != e3) {
-                        e2.setDegenerate(false);
-                        for (Face f : e2.faces) {
-                            f.replace(e2, e3);
-                        }
+                if (v1Edges.containsKey(e2.other(e.v1))) {
+                    e2.setDegenerate(false);
+                    Edge e3 = v1Edges.get(e2.other(e.v1));
+                    for (Face f : new LinkedList<>(e2.faces)) {
+                        f.replace(e2, e3);
                     }
                 } else {
-                    v1Edges.put(e2, e2);
+                    v1Edges.put(e2.other(e.v1), e2);
                     allEdges.remove(e2);
                     e2.updateQuadric();
                     allEdges.add(e2);
                 }
             }
         }
+        // System.out.println(allEdges.size() + " " + allFaces.size() + " " + e.contractionError);
     }
 
     public CustomModel toModel() {
         CustomModel m = new CustomModel();
         allFaces.forEach(f -> {
-            m.vertices.add(f.e12.v1.v);
-            m.vertices.add(f.e12.v2.v);
-            m.vertices.add(f.e13.v2.v);
+            List<Vertex> l = f.vertices();
+            if (l.size() == 3) {
+                for (Vertex v : f.vertices()) {
+                    m.vertices.add(v.v);
+                }
+            } else {
+                System.out.println(l);
+            }
         });
         return m;
     }
 
-    private class Vertex {
+    private static class Vertex {
+
+        private static int idMax;
+        private int id = idMax++;
 
         private VertexPBR v;
         private Quadric q;
@@ -128,6 +139,11 @@ public class ModelSimplifier2 {
 
         public Vertex(VertexPBR v) {
             this.v = v;
+        }
+
+        @Override
+        public String toString() {
+            return "" + v.position;
         }
     }
 
@@ -141,7 +157,7 @@ public class ModelSimplifier2 {
         private boolean degenerate;
 
         public Edge(Vertex v1, Vertex v2) {
-            if (v1.hashCode() > v2.hashCode()) {
+            if (v1.id > v2.id) {
                 this.v1 = v2;
                 this.v2 = v1;
             } else {
@@ -156,45 +172,28 @@ public class ModelSimplifier2 {
             return v2.v.position.sub(v1.v.position);
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Edge other = (Edge) obj;
-            if (!Objects.equals(this.v1, other.v1)) {
-                return false;
-            }
-            if (!Objects.equals(this.v2, other.v2)) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 5;
-            hash = 53 * hash + Objects.hashCode(this.v1);
-            hash = 53 * hash + Objects.hashCode(this.v2);
-            return hash;
-        }
-
         private Vec3d midpoint() {
             return v1.v.position.lerp(v2.v.position, .5);
         }
 
+        private Vertex other(Vertex v) {
+            if (v == v1) {
+                return v2;
+            }
+            if (v == v2) {
+                return v1;
+            }
+            throw new RuntimeException("Invalid argument");
+        }
+
         private void replace(Vertex vOld, Vertex vNew) {
             if (v1 == vOld) {
+                v1.edges.remove(this);
                 v1 = vNew;
                 v1.edges.add(this);
             }
             if (v2 == vOld) {
+                v2.edges.remove(this);
                 v2 = vNew;
                 v2.edges.add(this);
             }
@@ -206,15 +205,22 @@ public class ModelSimplifier2 {
         private void setDegenerate(boolean removeFaces) {
             degenerate = true;
             allEdges.remove(this);
+            v1.edges.remove(this);
+            v2.edges.remove(this);
             if (removeFaces) {
                 allFaces.removeAll(faces);
+                for (Face f : new LinkedList<>(faces)) {
+                    for (Edge e : f.edges()) {
+                        e.faces.remove(f);
+                    }
+                }
             }
         }
 
         private void updateQuadric() {
             q = v1.q.add(v2.q);
             contractionPos = q.minimumPos(midpoint());
-            contractionError = q.minimumVal(midpoint());
+            contractionError = q.minimumVal(midpoint()) + dir().length() * .01;
         }
     }
 
@@ -231,23 +237,34 @@ public class ModelSimplifier2 {
             e23.faces.add(this);
         }
 
+        private List<Edge> edges() {
+            return Arrays.asList(e12, e13, e23);
+        }
+
         private Vec3d normal() {
             return e12.dir().cross(e13.dir()).normalize();
         }
 
         private void replace(Edge eOld, Edge eNew) {
             if (e12 == eOld) {
+                e12.faces.remove(this);
                 e12 = eNew;
                 e12.faces.add(this);
             }
             if (e13 == eOld) {
+                e13.faces.remove(this);
                 e13 = eNew;
                 e13.faces.add(this);
             }
             if (e23 == eOld) {
+                e23.faces.remove(this);
                 e23 = eNew;
                 e23.faces.add(this);
             }
+        }
+
+        private List<Vertex> vertices() {
+            return new LinkedList(Stream.of(e12, e13, e23).flatMap(e -> Stream.of(e.v1, e.v2)).collect(Collectors.toSet()));
         }
     }
 

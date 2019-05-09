@@ -1,8 +1,7 @@
 package game;
 
 import engine.Behavior;
-import static game.TreeBranch.collisionShapes;
-import static game.TreeBranch.createBranchRenderable;
+import game.trees.TreeGenerator;
 import static game.vr.IceCaster.iceModel;
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
@@ -13,11 +12,8 @@ import graphics.renderables.Renderable;
 import graphics.renderables.RenderableList;
 import static graphics.voxels.VoxelRenderer.DIRS;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import physics.AABB;
 import physics.CollisionShape;
@@ -46,9 +42,7 @@ public class World extends Behavior {
 
     public CollisionShape collisionShape;
     private final List<AABB> buildings = new ArrayList();
-//    private final List<Vec3d> trees = new ArrayList();
-//    private final List<CapsuleShape> branches = new ArrayList();
-    private final Map<TreeBranch, Vec3d> trees = new HashMap();
+    private final TreeGenerator trees = new TreeGenerator();
     private final Random random = new Random();
 
     @Override
@@ -70,35 +64,16 @@ public class World extends Behavior {
             }
         }
 
-//        for (int k = 0; k < 200; k++) {
-//            double x = Math.random() * 2000;
-//            double y = Math.random() * 2000;
-//            double height = Math.random() * 120 + 40;
-//            trees.add(new Vec3d(x, y, height));
-//
-//            for (int i = 0; i < 16; i++) {
-//                double radius = 1 + Math.random();
-//                double angle = Math.random() * 2 * Math.PI;
-//                Vec3d dir = new Vec3d(Math.cos(angle), Math.sin(angle), 0);
-//                Vec3d pos = new Vec3d(x, y, Math.random() * height).add(dir.mul(5.5));
-//                dir = dir.mul(8 + Math.random() * 2);
-//                for (int j = 0; j < 3; j++) {
-//                    branches.add(new CapsuleShape(pos, dir, radius));
-//                    pos = pos.add(dir);
-//                    dir = dir.add(MathUtils.randomInSphere(random).mul(5));
-//                    radius = radius * (.8 + Math.random() * .2);
-//                }
-//            }
-//        }
-        for (int k = 0; k < 200; k++) {
+        trees.generateInstances(32);
+        for (int k = 0; k < 2000; k++) {
             double x = Math.random() * 2000;
             double y = Math.random() * 2000;
-            trees.put(TreeBranch.generateTree(), new Vec3d(x, y, 0));
+            trees.placeTree(new Vec3d(x, y, 0));
         }
 
         List<CollisionShape> l = new LinkedList();
         l.addAll(buildings);
-        l.addAll(collisionShapes(trees));
+        l.addAll(trees.collisionShapes());
         l.add(new SurfaceNetShape(iceModel));
         collisionShape = new MultigridShape(l);
 
@@ -154,11 +129,7 @@ public class World extends Behavior {
                 parts.add(new PBRModel(walls[i], PBRTexture.loadFromFolder(WALL_PBR_TEXTURES[i - WALL_TEXTURES.length])));
             }
         }
-//        parts.add(createBranchRenderable(trees));
-        for (Entry<TreeBranch, Vec3d> e : trees.entrySet()) {
-            parts.add(createBranchRenderable(e.getKey(), e.getValue()));
-        }
-//        parts.add(createLeafRenderable(trees));
+        parts.addAll(trees.renderables());
         return new RenderableList(parts);
     }
 

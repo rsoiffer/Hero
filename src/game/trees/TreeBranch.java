@@ -1,16 +1,13 @@
-package game;
+package game.trees;
 
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
-import graphics.models.ModelSimplifier2;
-import graphics.renderables.PBRModel;
+import graphics.renderables.LODPBRModel;
 import graphics.renderables.Renderable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import physics.CapsuleShape;
 import physics.CollisionShape;
@@ -22,7 +19,7 @@ import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class TreeBranch {
+class TreeBranch {
 
     private static final PBRTexture bark = PBRTexture.loadFromFolder("bark");
     private static final PBRTexture leaf = PBRTexture.loadFromFolder("leaf");
@@ -38,7 +35,7 @@ public class TreeBranch {
             TreeBranch next = genBranch(pos.add(dir), dir.add(newDir.mul(length)), level, segment + 1, false);
             b.next = next;
         }
-        if (level < 1) {
+        if (level < 2) {
             int numBranches = floor((4 + 2 * Math.random()) * 2 * Math.pow(.4, level));
             for (int i = 0; i < numBranches; i++) {
                 Vec3d newDir = MathUtils.randomInSphere(new Random());
@@ -101,70 +98,6 @@ public class TreeBranch {
         }
     }
 
-    public static List<CollisionShape> collisionShapes(Map<TreeBranch, Vec3d> trees) {
-        return trees.entrySet().stream().flatMap(e -> e.getKey().partsRecursive(2)
-                .map(p -> p.collisionShape(e.getValue()))).collect(Collectors.toList());
-    }
-
-    public static Renderable createBranchRenderable(TreeBranch tree, Vec3d pos) {
-        CustomModel treesModel = new CustomModel();
-        // for (TreeBranch tree : trees) {
-        tree.partsRecursive().filter(tb -> tb.root).forEach(tb -> {
-            List<Vec3d> branch = new ArrayList();
-            List<Double> radii = new ArrayList();
-            int detail = 12 / (tb.level + 1);
-            while (tb != null) {
-                branch.add(tb.pos);
-                radii.add(tb.radius);
-                if (tb.next == null) {
-                    branch.add(tb.pos.add(tb.dir));
-                    radii.add(tb.radius * .6);
-                    branch.add(tb.pos.add(tb.dir.mul(1.01)));
-                    radii.add(0.01);
-                }
-                tb = tb.next;
-            }
-            addBranchToModel(branch, radii, detail, treesModel);
-        });
-        // }
-        treesModel.smoothVertexNormals();
-//        treesModel.createVAO();
-//        System.out.println(treesModel.numTriangles());
-
-//        CustomModel treesModel2 = ModelSimplifier.simplify(treesModel);
-//        treesModel2.createVAO();
-//        System.out.println(treesModel2.numTriangles());
-        ModelSimplifier2 ms = new ModelSimplifier2(treesModel);
-        ms.simplify(.9);
-        CustomModel treesModel2 = ms.toModel();
-        treesModel2.createVAO();
-
-        PBRModel m = new PBRModel(treesModel2, bark);
-        m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
-        return m;
-    }
-
-    public static Renderable createLeafRenderable(List<TreeBranch> trees) {
-        CustomModel leavesModel = new CustomModel();
-        Random random = new Random();
-        Mutable<Integer> c = new Mutable(0);
-        for (TreeBranch tree : trees) {
-            tree.partsRecursive().filter(tb -> tb.level == 2).forEach(tb -> {
-                for (int i = 0; i < 10; i++) {
-                    double z = Math.random();
-                    double scale = 1 + 3 * Math.random();
-                    c.o += 1;
-                    leavesModel.addRectangle(tb.pos.add(tb.dir.mul(z)),
-                            MathUtils.randomInSphere(random).mul(scale), MathUtils.randomInSphere(random).mul(scale),
-                            new Vec2d(0, 0), new Vec2d(1, 0), new Vec2d(0, 1));
-                }
-            });
-        }
-        leavesModel.createVAO();
-        System.out.println(leavesModel.numTriangles());
-        return new PBRModel(leavesModel, leaf);
-    }
-
     // Instances
     private final Vec3d pos, dir;
     private final double radius;
@@ -172,6 +105,7 @@ public class TreeBranch {
     private final boolean root;
     private TreeBranch next;
     private final List<TreeBranch> branches = new LinkedList();
+    private LODPBRModel branchRenderable, leafRenderable;
 
     public TreeBranch(Vec3d pos, Vec3d dir, double radius, int level, boolean root) {
         this.pos = pos;
@@ -181,11 +115,67 @@ public class TreeBranch {
         this.root = root;
     }
 
-    private CapsuleShape collisionShape(Vec3d t) {
-        return new CapsuleShape(pos.add(t), dir, radius);
+    public Stream<CollisionShape> getCollisionShapes(Vec3d t) {
+        return partsRecursive(1).map(p -> new CapsuleShape(p.pos.add(t), p.dir, p.radius));
     }
 
-    private Stream<TreeBranch> partsRecursive() {
+    public Renderable getLeafRenderable(Vec3d pos) {
+        if (leafRenderable == null) {
+            CustomModel leafModel = new CustomModel();
+            Random random = new Random();
+            Mutable<Integer> c = new Mutable(0);
+            partsRecursive().filter(tb -> tb.level == 2).forEach(tb -> {
+                for (int i = 0; i < 10; i++) {
+                    double z = Math.random();
+                    double scale = 1 * (1 + 3 * Math.random());
+                    c.o += 1;
+                    leafModel.addRectangle(tb.pos.add(tb.dir.mul(z)),
+                            MathUtils.randomInSphere(random).mul(scale), MathUtils.randomInSphere(random).mul(scale),
+                            new Vec2d(0, 0), new Vec2d(1, 0), new Vec2d(0, 1));
+                }
+            });
+            leafModel.createVAO();
+
+            leafRenderable = new LODPBRModel(leafModel, leaf, 2);
+        }
+        LODPBRModel m = new LODPBRModel(leafRenderable);
+        m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
+        return m;
+    }
+
+    public Renderable getRenderable(Vec3d pos) {
+        if (branchRenderable == null) {
+            CustomModel branchModel = new CustomModel();
+            partsRecursive().filter(tb -> tb.root).forEach(tb -> {
+                List<Vec3d> branch = new ArrayList();
+                List<Double> radii = new ArrayList();
+                int detail = 12 / (tb.level + 1);
+                while (tb != null) {
+                    branch.add(tb.pos);
+                    radii.add(tb.radius);
+                    if (tb.next == null) {
+                        branch.add(tb.pos.add(tb.dir.mul(.99)));
+                        radii.add(tb.radius * .65);
+                        branch.add(tb.pos.add(tb.dir));
+                        radii.add(tb.radius * .6);
+                        branch.add(tb.pos.add(tb.dir.mul(1.01)));
+                        radii.add(0.01);
+                    }
+                    tb = tb.next;
+                }
+                addBranchToModel(branch, radii, detail, branchModel);
+            });
+            branchModel.smoothVertexNormals();
+            branchModel.createVAO();
+
+            branchRenderable = new LODPBRModel(branchModel, bark, 4);
+        }
+        LODPBRModel m = new LODPBRModel(branchRenderable);
+        m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
+        return m;
+    }
+
+    public Stream<TreeBranch> partsRecursive() {
         if (next == null) {
             return Stream.concat(Stream.of(this), branches.stream().flatMap(b -> b.partsRecursive()));
         }
@@ -193,7 +183,7 @@ public class TreeBranch {
                 branches.stream().flatMap(b -> b.partsRecursive()));
     }
 
-    private Stream<TreeBranch> partsRecursive(int maxLevel) {
+    public Stream<TreeBranch> partsRecursive(int maxLevel) {
         return partsRecursive().filter(p -> p.level <= maxLevel);
     }
 }

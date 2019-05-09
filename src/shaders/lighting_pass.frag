@@ -138,6 +138,9 @@ void main()
     vec3 reflectDir = reflect(-viewDir, Normal);
     vec3 F0 = mix(vec3(0.04), Albedo, Metallic);
     vec3 color = vec3(0.0);
+    if (dot(Normal, viewDir) < 0) {
+        Normal = -Normal;
+    }
 
     // sun lighting
     vec3 radiance = sunColor * (1 - ShadowCalculation(FragPos, Normal));
