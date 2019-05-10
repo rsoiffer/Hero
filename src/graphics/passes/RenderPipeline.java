@@ -10,7 +10,8 @@ import graphics.sprites.Sprite;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static org.lwjgl.opengl.GL11C.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.glFlush;
 import util.math.Transformation;
 import util.math.Vec2d;
 import util.math.Vec3d;
@@ -74,6 +75,7 @@ public class RenderPipeline extends Behavior {
         if (isVR) {
             Vive.submit(true, lpList.get(0).colorBuffer());
             Vive.submit(false, lpList.get(1).colorBuffer());
+            glFlush();
         }
 
         Camera.current = Camera.camera2d;

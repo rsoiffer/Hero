@@ -42,21 +42,32 @@ public class World extends Behavior {
 
     public CollisionShape collisionShape;
     private final List<AABB> buildings = new ArrayList();
-    private final TreeGenerator trees = new TreeGenerator();
+    private final TreeGenerator treeGenerator = new TreeGenerator();
     private final Random random = new Random();
 
     @Override
     public void createInner() {
+        treeGenerator.generateInstances(32);
         Noise heightNoise = new Noise(random);
+
         for (int i = 0; i < 2000; i += BLOCK_WIDTH) {
             for (int j = 0; j < 2000; j += BLOCK_HEIGHT) {
-                for (int k = 0; k < 200; k++) {
-                    double x = i + floor(Math.random() * 2) * BUILDING_SIZE;
-                    double y = j + floor(Math.random() * 8) * BUILDING_SIZE;
-                    if (x != 0 || y != 0) {
-                        if (!buildings.stream().anyMatch(b -> b.lower.x == x && b.lower.y == y)) {
-                            double height = floor(Math.random() * 40 * heightNoise.noise2d(x, y, .005) + 10) * FLOOR_HEIGHT;
-                            buildings.add(new AABB(new Vec3d(x, y, 0), new Vec3d(x + BUILDING_SIZE, y + BUILDING_SIZE, height)));
+                boolean parkBlock = Math.random() < .2;
+                if (parkBlock) {
+                    for (int k = 0; k < 10; k++) {
+                        double x = i + Math.random() * 2 * BUILDING_SIZE;
+                        double y = j + Math.random() * 8 * BUILDING_SIZE;
+                        treeGenerator.placeTree(new Vec3d(x, y, 0));
+                    }
+                } else {
+                    for (int k = 0; k < 200; k++) {
+                        double x = i + floor(Math.random() * 2) * BUILDING_SIZE;
+                        double y = j + floor(Math.random() * 8) * BUILDING_SIZE;
+                        if (x != 0 || y != 0) {
+                            if (!buildings.stream().anyMatch(b -> b.lower.x == x && b.lower.y == y)) {
+                                double height = floor(Math.random() * 40 * heightNoise.noise2d(x, y, .005) + 10) * FLOOR_HEIGHT;
+                                buildings.add(new AABB(new Vec3d(x, y, 0), new Vec3d(x + BUILDING_SIZE, y + BUILDING_SIZE, height)));
+                            }
                         }
                     }
                 }
@@ -64,16 +75,9 @@ public class World extends Behavior {
             }
         }
 
-        trees.generateInstances(32);
-        for (int k = 0; k < 1000; k++) {
-            double x = Math.random() * 2000;
-            double y = Math.random() * 2000;
-            trees.placeTree(new Vec3d(x, y, 0));
-        }
-
         List<CollisionShape> l = new LinkedList();
         l.addAll(buildings);
-        l.addAll(trees.collisionShapes());
+        l.addAll(treeGenerator.collisionShapes());
         l.add(new SurfaceNetShape(iceModel));
         collisionShape = new MultigridShape(l);
 
@@ -129,7 +133,7 @@ public class World extends Behavior {
                 parts.add(new PBRModel(walls[i], PBRTexture.loadFromFolder(WALL_PBR_TEXTURES[i - WALL_TEXTURES.length])));
             }
         }
-        parts.addAll(trees.renderables());
+        parts.addAll(treeGenerator.renderables());
         return new RenderableList(parts);
     }
 
