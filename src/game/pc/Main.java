@@ -25,6 +25,7 @@ public class Main {
     public static void main(String[] args) {
         Settings.SHOW_OPENGL_DEBUG_INFO = false;
         Settings.SHOW_CURSOR = false;
+        Settings.ENABLE_VSYNC = false;
         Core.init();
 
         new FPSBehavior().create();

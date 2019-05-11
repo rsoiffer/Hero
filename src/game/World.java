@@ -1,7 +1,7 @@
 package game;
 
 import engine.Behavior;
-import game.trees.TreeGenerator;
+import game.trees.StemGenerator;
 import static game.vr.IceCaster.iceModel;
 import graphics.PBRTexture;
 import graphics.models.CustomModel;
@@ -48,7 +48,7 @@ public class World extends Behavior {
     private final List<AABB> roads = new ArrayList();
     private final List<AABB> sidewalks = new ArrayList();
     private final List<AABB> parks = new ArrayList();
-    private final TreeGenerator treeGenerator = new TreeGenerator();
+    private final StemGenerator treeGenerator = new StemGenerator();
     private final List<AABB> billboards = new ArrayList();
     private final List<CapsuleShape> poles = new ArrayList();
 

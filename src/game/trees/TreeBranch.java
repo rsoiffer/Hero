@@ -35,7 +35,7 @@ class TreeBranch {
             TreeBranch next = genBranch(pos.add(dir), dir.add(newDir.mul(length)), level, segment + 1, false);
             b.next = next;
         }
-        if (level < 1) {
+        if (level < 2) {
             int numBranches = floor(2 * (2 + Math.random()) * Math.pow(.4, level));
             for (int i = 0; i < numBranches; i++) {
                 Vec3d newDir = MathUtils.randomInSphere(new Random());

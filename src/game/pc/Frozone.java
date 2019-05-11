@@ -26,7 +26,7 @@ public class Frozone extends Behavior {
 
     public final Player player = require(Player.class);
 
-    public boolean fly = false;
+    public boolean fly = true;
     public double timer;
     public double timer2;
 
