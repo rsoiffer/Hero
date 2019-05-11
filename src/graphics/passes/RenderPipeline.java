@@ -21,7 +21,7 @@ import vr.Vive;
 public class RenderPipeline extends Behavior {
 
     public Color skyColor = new Color(.4, .7, 1, 1);
-    public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.3);
+    public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.4);
     public Vec3d sunDirection = new Vec3d(.4, -.2, 1);
     public boolean isVR;
 
@@ -39,8 +39,8 @@ public class RenderPipeline extends Behavior {
         for (int i = 0; i < 5; i++) {
             ShadowPass sp = new ShadowPass();
             sp.cameras = cameras;
-            sp.zMin = i == 0 ? -1 : (1 - Math.pow(.3, i + 2));
-            sp.zMax = 1 - Math.pow(.3, i + 3);
+            sp.zMin = i == 0 ? -1 : (1 - Math.pow(.2, i + 1));
+            sp.zMax = 1 - Math.pow(.2, i + 2);
             sp.sunDirection = sunDirection;
             spList.add(sp);
         }

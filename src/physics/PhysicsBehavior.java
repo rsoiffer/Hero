@@ -21,6 +21,7 @@ public class PhysicsBehavior extends Behavior {
     public World world;
 
     public boolean onGround;
+    public Vec3d velocityChange = new Vec3d(0, 0, 0);
 
     @Override
     public Layer layer() {
@@ -30,32 +31,7 @@ public class PhysicsBehavior extends Behavior {
     @Override
     public void step() {
         onGround = false;
-//        List<Vec3d> l1 = world.collisionShape.intersect(new SphereShape(position.position, radius));
-//        if (!l1.isEmpty()) {
-//            Vec3d pos = prevPos.prevPos.sub(position.position);
-//            Vec3d vel = pos.mul(-1);
-//            while (true) {
-//                TreeMap<Double, Vec3d> m = new TreeMap();
-//                for (Vec3d v : l1) {
-//                    double d = vel.dot(v);
-//                    if (Math.abs(d) > 1e-12) {
-//                        double t = v.sub(pos).dot(v) / d;
-//                        m.put(t, v);
-//                    }
-//                }
-//                Entry<Double, Vec3d> e = m.ceilingEntry(-1e-12);
-//                if (e == null || e.getKey() >= 1) {
-//                    pos = pos.add(vel);
-//                    break;
-//                }
-//                double t = e.getKey();
-//                Vec3d v = e.getValue();
-//                pos = pos.add(vel.mul(t - 1e-6));
-//                vel = vel.projectAgainst(v).mul(1 - t);
-//                velocity.velocity = velocity.velocity.projectAgainst(v);
-//            }
-//            position.position = position.position.add(pos);
-//        }
+        Vec3d oldVelocity = velocity.velocity;
 
         List<Vec3d> l2 = world.collisionShape.intersect(new SphereShape(position.position, radius));
         if (!l2.isEmpty()) {
@@ -83,5 +59,7 @@ public class PhysicsBehavior extends Behavior {
             }
             position.position = position.position.add(sum.mul(t));
         }
+
+        velocityChange = velocity.velocity.sub(oldVelocity);
     }
 }

@@ -43,7 +43,7 @@ public class LODPBRModel extends Renderable {
 
     @Override
     public void renderGeom() {
-        double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.current.getPos()).setZ(0).length();
+        double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.camera3d.position).setZ(0).length();
         int lod = clamp(round(estimatedDist / 200), 0, numLOD);
         if (lod < numLOD) {
             bindAll(SHADER_PBR, tex);
@@ -54,7 +54,7 @@ public class LODPBRModel extends Renderable {
 
     @Override
     public void renderShadow() {
-        double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.current.getPos()).setZ(0).length();
+        double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.camera3d.position).setZ(0).length();
         int lod = clamp(round(estimatedDist / 200), 0, numLOD);
         if (lod < numLOD) {
             if (tex.hasAlpha()) {

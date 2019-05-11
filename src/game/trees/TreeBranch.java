@@ -36,11 +36,11 @@ class TreeBranch {
             b.next = next;
         }
         if (level < 2) {
-            int numBranches = floor((4 + 2 * Math.random()) * 2 * Math.pow(.4, level));
+            int numBranches = floor(2 * (2 + Math.random()) * Math.pow(.4, level));
             for (int i = 0; i < numBranches; i++) {
                 Vec3d newDir = MathUtils.randomInSphere(new Random());
                 if (level == 0) {
-                    newDir = newDir.projectAgainst(dir);
+                    newDir = newDir.projectAgainst(dir).lerp(newDir.add(dir.mul(.1)), .1 + .2 * segment);
                 } else {
                     newDir = newDir.add(dir.mul(.1));
                 }
@@ -60,7 +60,7 @@ class TreeBranch {
     }
 
     private static double radius(int level, int segment) {
-        return 5.0 * Math.pow(.2, level) * (1 - segment * .18);
+        return 2.0 * Math.pow(.5, level) * (1 - segment * .22);
     }
 
     // Model creation
@@ -125,9 +125,9 @@ class TreeBranch {
             Random random = new Random();
             Mutable<Integer> c = new Mutable(0);
             partsRecursive().filter(tb -> tb.level == 2).forEach(tb -> {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 30; i++) {
                     double z = Math.random();
-                    double scale = 1 * (1 + 3 * Math.random());
+                    double scale = 1.5 * (1 + 3 * Math.random());
                     c.o += 1;
                     leafModel.addRectangle(tb.pos.add(tb.dir.mul(z)),
                             MathUtils.randomInSphere(random).mul(scale), MathUtils.randomInSphere(random).mul(scale),

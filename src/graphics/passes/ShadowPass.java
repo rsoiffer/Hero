@@ -58,7 +58,7 @@ public class ShadowPass implements Runnable {
             @Override
             public Matrix4d projectionMatrix() {
                 AABB aabb = frustumAABB(zMin, zMax, viewMatrix());
-                return new Matrix4d().ortho(aabb.lower.x, aabb.upper.x, aabb.lower.y, aabb.upper.y, -aabb.upper.z - 200, -aabb.lower.z);
+                return new Matrix4d().ortho(aabb.lower.x, aabb.upper.x, aabb.lower.y, aabb.upper.y, -aabb.upper.z - 300, -aabb.lower.z);
             }
 
             @Override

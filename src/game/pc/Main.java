@@ -23,6 +23,7 @@ import util.math.Vec3d;
 public class Main {
 
     public static void main(String[] args) {
+        Settings.SHOW_OPENGL_DEBUG_INFO = false;
         Settings.SHOW_CURSOR = false;
         Core.init();
 

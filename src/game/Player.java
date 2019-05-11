@@ -9,6 +9,8 @@ import engine.Layer;
 import graphics.Camera;
 import physics.PhysicsBehavior;
 import util.math.Vec3d;
+import vr.Vive;
+import vr.ViveInput;
 
 public class Player extends Behavior {
 
@@ -58,5 +60,11 @@ public class Player extends Behavior {
         }
         double friction = physics.onGround ? 2 : .01;
         velocity.velocity = velocity.velocity.mul(Math.exp(-dt() * friction));
+        if (physics.velocityChange.lengthSquared() > 10) {
+            if (Vive.running) {
+                ViveInput.LEFT.hapticPulse(5);
+                ViveInput.RIGHT.hapticPulse(5);
+            }
+        }
     }
 }

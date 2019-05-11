@@ -34,6 +34,12 @@ public class AssimpModel implements Model {
 
         for (int i = 0; i < scene.mNumMeshes(); i++) {
             AIMesh mesh = AIMesh.create(scene.mMeshes().get(i));
+            System.out.println(mesh.mMaterialIndex());
+            if (mesh.mTextureCoords(0) == null) {
+                System.err.println("Warning: Skipping submesh because mTextureCoords(0) is null");
+                continue;
+            }
+            int vertexOffset = vertices.size();
             for (int j = 0; j < mesh.mNumVertices(); j++) {
                 vertices.add(new VertexPBR(
                         toVec3d(mesh.mVertices().get(j)),
@@ -44,9 +50,9 @@ public class AssimpModel implements Model {
                 ));
             }
             mesh.mFaces().forEach(aiFace -> {
-                indices.add(aiFace.mIndices().get(0));
-                indices.add(aiFace.mIndices().get(1));
-                indices.add(aiFace.mIndices().get(2));
+                indices.add(vertexOffset + aiFace.mIndices().get(0));
+                indices.add(vertexOffset + aiFace.mIndices().get(1));
+                indices.add(vertexOffset + aiFace.mIndices().get(2));
             });
         }
 

@@ -2,11 +2,8 @@ package game.trees;
 
 import graphics.renderables.Renderable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import physics.CollisionShape;
 import static util.math.MathUtils.floor;
 import util.math.Vec3d;
@@ -14,30 +11,46 @@ import util.math.Vec3d;
 public class TreeGenerator {
 
     private final List<TreeBranch> treeInstances = new ArrayList();
-    private final Map<Vec3d, TreeBranch> treePlacements = new HashMap();
+    private final List<List<Vec3d>> treePlacements = new ArrayList();
 
     public List<CollisionShape> collisionShapes() {
-        return treePlacements.entrySet().stream()
-                .flatMap(e -> e.getValue().getCollisionShapes(e.getKey()))
-                .collect(Collectors.toList());
+        List<CollisionShape> r = new LinkedList();
+        for (int i = 0; i < treeInstances.size(); i++) {
+            TreeBranch tb = treeInstances.get(i);
+            for (Vec3d v : treePlacements.get(i)) {
+                tb.getCollisionShapes(v).forEach(r::add);
+            }
+        }
+        return r;
     }
 
     public void generateInstances(int num) {
         for (int i = 0; i < num; i++) {
             TreeBranch tb = TreeBranch.generateTree();
             treeInstances.add(tb);
+            treePlacements.add(new LinkedList());
         }
     }
 
     public void placeTree(Vec3d pos) {
-        TreeBranch chosen = treeInstances.get(floor(Math.random() * treeInstances.size()));
-        treePlacements.put(pos, chosen);
+        int chosen = floor(Math.random() * treeInstances.size());
+        treePlacements.get(chosen).add(pos);
     }
 
     public List<Renderable> renderables() {
-        return treePlacements.entrySet().stream().flatMap(e -> Stream.of(
-                e.getValue().getRenderable(e.getKey()), e.getValue().getLeafRenderable(e.getKey())))
-                // e.getValue().getRenderable(e.getKey())))
-                .collect(Collectors.toList());
+        List<Renderable> r = new LinkedList();
+        for (int i = 0; i < treeInstances.size(); i++) {
+            TreeBranch tb = treeInstances.get(i);
+            for (Vec3d v : treePlacements.get(i)) {
+                r.add(tb.getRenderable(v));
+            }
+        }
+        for (int i = 0; i < treeInstances.size(); i++) {
+            TreeBranch tb = treeInstances.get(i);
+            for (Vec3d v : treePlacements.get(i)) {
+                r.add(tb.getLeafRenderable(v));
+            }
+        }
+        return r;
     }
 }
