@@ -62,4 +62,9 @@ public class PhysicsBehavior extends Behavior {
 
         velocityChange = velocity.velocity.sub(oldVelocity);
     }
+    
+    public boolean wouldCollideAt(Vec3d pos) {
+        List<Vec3d> l2 = world.collisionShape.intersect(new SphereShape(pos, radius));
+        return !l2.isEmpty();
+    }
 }

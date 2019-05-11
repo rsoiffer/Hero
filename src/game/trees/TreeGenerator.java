@@ -45,12 +45,12 @@ public class TreeGenerator {
                 r.add(tb.getRenderable(v));
             }
         }
-        for (int i = 0; i < treeInstances.size(); i++) {
-            TreeBranch tb = treeInstances.get(i);
-            for (Vec3d v : treePlacements.get(i)) {
-                r.add(tb.getLeafRenderable(v));
-            }
-        }
+//        for (int i = 0; i < treeInstances.size(); i++) {
+//            TreeBranch tb = treeInstances.get(i);
+//            for (Vec3d v : treePlacements.get(i)) {
+//                r.add(tb.getLeafRenderable(v));
+//            }
+//        }
         return r;
     }
 }

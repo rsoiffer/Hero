@@ -40,18 +40,18 @@ public class Teleport extends Behavior {
     }
 
     public Vec3d findPos() {
-        Vec3d start = controller.pos();
-        Vec3d dir = controller.controller.forwards();
-        for (int j = 0; j < 10; j++) {
-            Vec3d dir2 = dir.add(new Vec3d(0, 0, -.01 * j)).normalize();
-//            double tZ = controller.player.physics.world.buildings.stream()
-//                    .map(b -> b.expand(1.05))
-//                    .mapToDouble(b -> b.raycastZ(start, dir2))
-//                    .filter(d -> d >= 0).min().orElse(-1);
-//            double t = controller.player.physics.world.collisionShape.raycast(start, dir);
-//            if ((t == -1 || tZ < t) && tZ > 0 && tZ < 100) {
-//                return start.add(dir2.mul(tZ));
-//            }
+        Vec3d pos = controller.pos();
+        if (controller.player.physics.wouldCollideAt(pos)) {
+            return null;
+        }
+        Vec3d vel = controller.controller.forwards();
+        for (int i = 0; i < 400; i++) {
+            Vec3d pos2 = pos.add(vel.mul(.5));
+            if (controller.player.physics.wouldCollideAt(pos2)) {
+                return pos;
+            }
+            pos = pos2;
+            vel = vel.add(new Vec3d(0, 0, -.01));
         }
         return null;
     }

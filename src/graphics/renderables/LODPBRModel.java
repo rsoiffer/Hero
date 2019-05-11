@@ -21,6 +21,7 @@ public class LODPBRModel extends Renderable {
     public List<CustomModel> modelLODS = new ArrayList();
     public PBRTexture tex;
     public Transformation t = Transformation.IDENTITY;
+    public boolean castShadow = true;
 
     public LODPBRModel(CustomModel model, PBRTexture tex, int numLOD) {
         this.numLOD = numLOD;
@@ -54,16 +55,18 @@ public class LODPBRModel extends Renderable {
 
     @Override
     public void renderShadow() {
-        double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.camera3d.position).setZ(0).length();
-        int lod = clamp(round(estimatedDist / 200), 0, numLOD);
-        if (lod < numLOD) {
-            if (tex.hasAlpha()) {
-                bindAll(SHADER_SHADOW_ALPHA, tex);
-            } else {
-                bindAll(SHADER_SHADOW);
+        if (castShadow) {
+            double estimatedDist = t.apply(new Vec3d(0, 0, 0)).sub(Camera.camera3d.position).setZ(0).length();
+            int lod = clamp(round(estimatedDist / 200), 0, numLOD);
+            if (lod < numLOD) {
+                if (tex.hasAlpha()) {
+                    bindAll(SHADER_SHADOW_ALPHA, tex);
+                } else {
+                    bindAll(SHADER_SHADOW);
+                }
+                setTransform(t);
+                modelLODS.get(lod).render();
             }
-            setTransform(t);
-            modelLODS.get(lod).render();
         }
     }
 }
