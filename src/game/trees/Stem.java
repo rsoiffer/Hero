@@ -4,13 +4,11 @@ import graphics.PBRTexture;
 import graphics.models.CustomModel;
 import graphics.renderables.LODPBRModel;
 import graphics.renderables.Renderable;
+import graphics.renderables.RenderableList;
 import static java.lang.Double.NaN;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import util.math.MathUtils;
 import static util.math.MathUtils.ceil;
-import static util.math.MathUtils.clamp;
 import static util.math.MathUtils.floor;
 import static util.math.MathUtils.lerp;
 import util.math.Quaternion;
@@ -24,7 +22,7 @@ public class Stem {
 
     private final int Shape = 4;
     private final double BaseSize = 0.2;
-    private final int Scale = 23 * 2, ScaleV = 5, ZScale = 1, ZScaleV = 0;
+    private final int Scale = 23, ScaleV = 5, ZScale = 1, ZScaleV = 0;
     private final int Levels = 4;
     private final double Ratio = .015, RatioPower = 1.3;
     private final int Lobes = 3;
@@ -50,28 +48,28 @@ public class Stem {
     private final double AttractionUp = 0.5;
 
     public Stem parent;
-    public int level, n;
+    public int level;
     public double myLength;
     public double myRadius;
-    public Vec3d xAxis;
+    public double myStems;
 
     public List<Vec3d> tube;
+    public List<Quaternion> tubeDirs;
     public List<Stem> children;
+
+    public List<Vec3d> leaves;
+    public List<Quaternion> leafDirs;
+
     public LODPBRModel renderable;
+    public LODPBRModel renderableLeaves;
 
     // Trunk-only data
     public double scaleTree;
     public double lengthBase;
 
-    // Branch-only data
-    public double myStems;
-    public double myDownAngle;
-
-    private Stem(Stem parent, double offsetChild, Vec3d basePos, Vec3d zDir, Vec3d xAxis) {
+    private Stem(Stem parent, double offsetChild, Vec3d basePos, Quaternion baseDir) {
         this.parent = parent;
         level = parent == null ? 0 : parent.level + 1;
-        n = Math.min(level, 3);
-        this.xAxis = xAxis;
 
         if (level == 0) {
             scaleTree = Scale + pm() * ScaleV;
@@ -95,13 +93,14 @@ public class Stem {
         }
 
         if (level != 0) {
+            double myDownAngle;
             if (DownAngleV[level] > 0) {
                 myDownAngle = DownAngle[level] + pm() * DownAngleV[level];
             } else {
                 double ratio = (parent.myLength - offsetChild) / (parent.myLength - parent.lengthBase);
                 myDownAngle = DownAngle[level] + 1 * (DownAngleV[level] * (1 - 2 * shapeRatio(0, ratio)));
             }
-            zDir = Quaternion.fromAngleAxis(Math.toRadians(myDownAngle), xAxis).applyTo(zDir);
+            baseDir = rotateX(baseDir, myDownAngle);
         }
 
         if (level == 0) {
@@ -110,38 +109,46 @@ public class Stem {
             myRadius = parent.myRadius * Math.pow(myLength / parent.myLength, RatioPower);
         }
 
-        createTube(basePos, zDir.setLength(myLength));
+        createTube(basePos, baseDir);
 
         if (level < Levels - 1) {
             children = new ArrayList();
             int numChildren = floor(myStems + Math.random());
             double angle = Math.random() * 360;
             for (int i = 0; i < numChildren; i++) {
-                double offset = lerp(level == 0 ? BaseSize : 0, 1, (i + .5) / numChildren);
+                double z = lerp(level == 0 ? BaseSize : 0, 1, (i + .5) / numChildren);
                 angle += Rotate[level + 1] + pm() * RotateV[level + 1];
 
-                Vec3d xAxis2 = Quaternion.fromAngleAxis(Math.toDegrees(angle), zDir).applyTo(xAxis);
-                xAxis2 = getDirZ(offset).cross(xAxis2).cross(getDirZ(offset)).setLength(-1);
-                Vec3d basePos2 = getPosZ(offset).add(xAxis2.cross(getDirZ(offset)).setLength(.8 * radiusZ(offset, angle)));
-                children.add(new Stem(this, myLength * offset, basePos2, getDirZ(offset), xAxis2));
+                Quaternion baseDir2 = rotateZ(getDirZ(z), angle);
+                Vec3d basePos2 = getPosZ(z).add(baseDir2.applyTo(new Vec3d(0, -0.5 * radiusZ(z, angle), 0)));
+                children.add(new Stem(this, myLength * z, basePos2, baseDir2));
             }
         } else {
+            leaves = new ArrayList();
+            leafDirs = new ArrayList();
             double leavesPerBranch = Leaves * shapeRatio(4, offsetChild / parent.myLength) * QUALITY;
+            int numLeaves = floor(leavesPerBranch + Math.random());
+            double angle = Math.random() * 360;
+            for (int i = 0; i < numLeaves; i++) {
+                double z = (i + .5) / numLeaves;
+                angle += Rotate[Math.min(3, level + 1)] + pm() * RotateV[Math.min(3, level + 1)];
+
+                Vec3d basePos2 = getPosZ(z);
+                leaves.add(basePos2);
+                Quaternion baseDir2 = rotateZ(getDirZ(z), angle);
+                baseDir2 = rotateX(baseDir2, DownAngle[Math.min(3, level + 1)] + pm() * DownAngleV[Math.min(3, level + 1)]);
+                leafDirs.add(baseDir2);
+            }
         }
     }
 
     private void addToModel(CustomModel model) {
         int detail = 12 / (level + 1);
 
-        Vec3d randomDir = MathUtils.randomInSphere(new Random());
-        randomDir = randomDir.projectAgainst(tube.get(tube.size() - 1).sub(tube.get(0)));
         List<Vec3d> dirs1 = new ArrayList(), dirs2 = new ArrayList();
         for (int i = 0; i < tube.size(); i++) {
-            Vec3d dir0 = tube.get(Math.min(i + 1, tube.size() - 1)).sub(tube.get(Math.max(i - 1, 0))).normalize();
-            Vec3d dir1 = dir0.cross(randomDir).normalize();
-            Vec3d dir2 = dir0.cross(dir1).normalize();
-            dirs1.add(dir1);
-            dirs2.add(dir2);
+            dirs1.add(tubeDirs.get(Math.min(i, tubeDirs.size() - 1)).applyTo(new Vec3d(1, 0, 0)));
+            dirs2.add(tubeDirs.get(Math.min(i, tubeDirs.size() - 1)).applyTo(new Vec3d(0, 1, 0)));
         }
         double texW = Math.max(1, floor(2 * Math.PI * radiusZ(0, 0) / 2));
         double texH = 0;
@@ -172,33 +179,78 @@ public class Stem {
         }
     }
 
-    private void createTube(Vec3d basePos, Vec3d baseDir) {
+    private void addToModelLeaves(CustomModel model) {
+        if (leaves != null) {
+            for (int i = 0; i < leaves.size(); i++) {
+                Vec3d pos = leaves.get(i);
+                Quaternion dir = leafDirs.get(i);
+                double length = LeafScale / Math.sqrt(QUALITY);
+                double width = LeafScale * LeafScaleX / Math.sqrt(QUALITY);
+
+                double bend = 1;
+                Vec3d normal = dir.applyTo(new Vec3d(1, 0, 0));
+                double thetaPosition = Math.atan2(pos.y, pos.x);
+                double thetaBend = thetaPosition - Math.atan2(normal.y, normal.x);
+                dir = rotateZ(dir, bend * thetaBend);
+                double orientation = Math.acos(dir.applyTo(new Vec3d(0, 1, 0)).z);
+                normal = dir.applyTo(new Vec3d(1, 0, 0));
+                double phiBend = Math.atan2(Math.sqrt(normal.x * normal.x + normal.y + normal.y), normal.z);
+                dir = rotateZ(dir, -orientation);
+                dir = rotateX(dir, bend * phiBend);
+                dir = rotateZ(dir, orientation);
+
+                Vec3d tip = pos.add(dir.applyTo(new Vec3d(0, 0, length)));
+                Vec3d p = pos.add(dir.applyTo(new Vec3d(0, -0.5 * width, length * .25)));
+                Vec3d edge1 = dir.applyTo(new Vec3d(0, width, 0));
+                Vec3d edge2 = dir.applyTo(new Vec3d(0, 0, length * .5));
+                model.addRectangle(p, edge1, edge2, new Vec2d(0, 0), new Vec2d(1, 0), new Vec2d(0, 1));
+
+                model.addTriangle(pos, new Vec2d(.5, -.5), p, new Vec2d(0, 0), p.add(edge1), new Vec2d(1, 0));
+                model.addTriangle(tip, new Vec2d(.5, 1.5), p.add(edge2), new Vec2d(0, 1), p.add(edge1).add(edge2), new Vec2d(1, 1));
+            }
+        }
+
+        if (children != null) {
+            children.forEach(c -> c.addToModelLeaves(model));
+        }
+    }
+
+    private void createTube(Vec3d basePos, Quaternion baseDir) {
         tube = new ArrayList();
+        tubeDirs = new ArrayList();
         tube.add(basePos);
-        Vec3d pos = basePos, dir = baseDir;
+        Vec3d pos = basePos;
+        Quaternion dir = baseDir;
         for (int i = 0; i < CurveRes[level]; i++) {
-            double angle = Math.toRadians((Curve[level] + pm() * CurveV[level]) / CurveRes[level]);
-            dir = Quaternion.fromAngleAxis(angle, xAxis).applyTo(dir);
-            pos = pos.add(dir.mul(1. / CurveRes[level]));
+            tubeDirs.add(dir);
+            double angle = (Curve[level] + pm() * CurveV[level]) / CurveRes[level];
+            dir = rotateX(dir, angle);
+
+            if (level > 1) {
+                double declination = Math.acos(dir.applyTo(new Vec3d(0, 0, 1)).z);
+                double orientation = Math.acos(dir.applyTo(new Vec3d(0, 1, 0)).z);
+                double curveUpSegment = AttractionUp * declination * Math.cos(orientation) / CurveRes[level];
+                dir = rotateX(dir, curveUpSegment);
+            }
+
+            pos = pos.add(dir.applyTo(new Vec3d(0, 0, myLength / CurveRes[level])));
             tube.add(pos);
         }
     }
 
     public static Stem generateTree() {
-        Vec3d xAxis = Quaternion.fromAngleAxis(Math.random() * 2 * Math.PI, new Vec3d(0, 0, 1)).applyToForwards();
-        return new Stem(null, 0, new Vec3d(0, 0, 0), new Vec3d(0, 0, 1), xAxis);
+        Quaternion q = Quaternion.fromAngleAxis(Math.random() * 2 * Math.PI, new Vec3d(0, 0, 1));
+        return new Stem(null, 0, new Vec3d(0, 0, 0), q);
     }
 
-    private Vec3d getDirZ(double z) {
+    private Quaternion getDirZ(double z) {
         z *= tube.size() - 1;
-        z = clamp(z, 0, tube.size() - 1);
-        return tube.get(ceil(z)).sub(tube.get(ceil(z - 1))).normalize();
+        return tubeDirs.get(floor(z));
     }
 
     private Vec3d getPosZ(double z) {
         z *= tube.size() - 1;
-        z = clamp(z, 0, tube.size() - 1);
-        return tube.get(ceil(z - 1)).lerp(tube.get(ceil(z)), ceil(z) - z);
+        return tube.get(floor(z)).lerp(tube.get(ceil(z)), z - floor(z));
     }
 
     private static double pm() {
@@ -240,6 +292,18 @@ public class Stem {
         return radiusZ;
     }
 
+    private static Quaternion rotateX(Quaternion q, double angle) {
+        return q.mul(Quaternion.fromAngleAxis(Math.toRadians(angle), new Vec3d(1, 0, 0)));
+    }
+
+    private static Quaternion rotateY(Quaternion q, double angle) {
+        return q.mul(Quaternion.fromAngleAxis(Math.toRadians(angle), new Vec3d(0, 1, 0)));
+    }
+
+    private static Quaternion rotateZ(Quaternion q, double angle) {
+        return q.mul(Quaternion.fromAngleAxis(Math.toRadians(angle), new Vec3d(0, 0, 1)));
+    }
+
     private static double shapeRatio(int shape, double ratio) {
         switch (shape) {
             case 0:
@@ -260,13 +324,17 @@ public class Stem {
 //            model.smoothVertexNormals();
             model.createVAO();
             renderable = new LODPBRModel(model, PBRTexture.loadFromFolder("bark"), 2);
-            for (CustomModel m2 : renderable.modelLODS) {
-                System.out.println(m2.numTriangles());
-            }
+
+            CustomModel modelLeaves = new CustomModel();
+            addToModelLeaves(modelLeaves);
+            modelLeaves.createVAO();
+            renderableLeaves = new LODPBRModel(modelLeaves, PBRTexture.loadFromFolder("grass"), 2);
         }
 
         LODPBRModel m = new LODPBRModel(renderable);
         m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
-        return m;
+        LODPBRModel ml = new LODPBRModel(renderableLeaves);
+        ml.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
+        return new RenderableList(m, ml);
     }
 }
