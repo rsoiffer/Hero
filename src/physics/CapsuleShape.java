@@ -43,4 +43,9 @@ public class CapsuleShape extends CollisionShape {
         Vec3d v = CommonPhysics.segmentPointClosest(pos, pos.add(dir), point);
         return v.add(point.sub(v).setLength(radius));
     }
+
+    @Override
+    public String toString() {
+        return "CapsuleShape{" + "pos=" + pos + ", dir=" + dir + ", radius=" + radius + '}';
+    }
 }

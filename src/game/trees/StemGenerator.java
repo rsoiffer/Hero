@@ -15,17 +15,17 @@ public class StemGenerator {
 
     public List<CollisionShape> collisionShapes() {
         List<CollisionShape> r = new LinkedList();
-//        for (int i = 0; i < treeInstances.size(); i++) {
-//            Stem tb = treeInstances.get(i);
-//            for (Vec3d v : treePlacements.get(i)) {
-//                tb.getCollisionShapes(v).forEach(r::add);
-//            }
-//        }
+        for (int i = 0; i < treeInstances.size(); i++) {
+            Stem tb = treeInstances.get(i);
+            for (Vec3d v : treePlacements.get(i)) {
+                tb.getCollisionShapes(v).forEach(r::add);
+            }
+        }
         return r;
     }
 
     public void generateInstances(int num) {
-        num = 4;
+        num = 8;
         for (int i = 0; i < num; i++) {
             Stem tb = Stem.generateTree();
             treeInstances.add(tb);

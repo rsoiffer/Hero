@@ -8,6 +8,10 @@ import graphics.renderables.RenderableList;
 import static java.lang.Double.NaN;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+import physics.CapsuleShape;
+import physics.CollisionShape;
 import static util.math.MathUtils.ceil;
 import static util.math.MathUtils.floor;
 import static util.math.MathUtils.lerp;
@@ -19,6 +23,9 @@ import util.math.Vec3d;
 public class Stem {
 
     public static final double QUALITY = 1;
+
+    private static final PBRTexture bark = PBRTexture.loadFromFolder("bark");
+    private static final PBRTexture leaf = PBRTexture.loadFromFolder("grass");
 
     private final int Shape = 4;
     private final double BaseSize = 0.2;
@@ -53,6 +60,7 @@ public class Stem {
     public double myRadius;
     public double myStems;
 
+    public int numSegments;
     public List<Vec3d> tube;
     public List<Quaternion> tubeDirs;
     public List<Stem> children;
@@ -216,24 +224,25 @@ public class Stem {
     }
 
     private void createTube(Vec3d basePos, Quaternion baseDir) {
+        numSegments = CurveRes[level];
         tube = new ArrayList();
         tubeDirs = new ArrayList();
         tube.add(basePos);
         Vec3d pos = basePos;
         Quaternion dir = baseDir;
-        for (int i = 0; i < CurveRes[level]; i++) {
+        for (int i = 0; i < numSegments; i++) {
             tubeDirs.add(dir);
-            double angle = (Curve[level] + pm() * CurveV[level]) / CurveRes[level];
+            double angle = (Curve[level] + pm() * CurveV[level]) / numSegments;
             dir = rotateX(dir, angle);
 
             if (level > 1) {
                 double declination = Math.acos(dir.applyTo(new Vec3d(0, 0, 1)).z);
                 double orientation = Math.acos(dir.applyTo(new Vec3d(0, 1, 0)).z);
-                double curveUpSegment = AttractionUp * declination * Math.cos(orientation) / CurveRes[level];
+                double curveUpSegment = AttractionUp * declination * Math.cos(orientation) / numSegments;
                 dir = rotateX(dir, curveUpSegment);
             }
 
-            pos = pos.add(dir.applyTo(new Vec3d(0, 0, myLength / CurveRes[level])));
+            pos = pos.add(dir.applyTo(new Vec3d(0, 0, myLength / numSegments)));
             tube.add(pos);
         }
     }
@@ -244,12 +253,12 @@ public class Stem {
     }
 
     private Quaternion getDirZ(double z) {
-        z *= tube.size() - 1;
+        z *= numSegments;
         return tubeDirs.get(floor(z));
     }
 
     private Vec3d getPosZ(double z) {
-        z *= tube.size() - 1;
+        z *= numSegments;
         return tube.get(floor(z)).lerp(tube.get(ceil(z)), z - floor(z));
     }
 
@@ -317,18 +326,29 @@ public class Stem {
         }
     }
 
+    public Stream<CollisionShape> getCollisionShapes(Vec3d pos) {
+        if (level >= 2) {
+            return Stream.of();
+        }
+        return Stream.concat(
+                IntStream.range(0, numSegments).mapToObj(i -> new CapsuleShape(pos.add(tube.get(i)),
+                tube.get(i + 1).sub(tube.get(i)), radiusZ((i + .5) / numSegments, 0))),
+                children.stream().flatMap(c -> c.getCollisionShapes(pos))
+        );
+    }
+
     public Renderable getRenderable(Vec3d pos) {
         if (renderable == null) {
             CustomModel model = new CustomModel();
             addToModel(model);
 //            model.smoothVertexNormals();
             model.createVAO();
-            renderable = new LODPBRModel(model, PBRTexture.loadFromFolder("bark"), 2);
+            renderable = new LODPBRModel(model, bark, 2);
 
             CustomModel modelLeaves = new CustomModel();
             addToModelLeaves(modelLeaves);
             modelLeaves.createVAO();
-            renderableLeaves = new LODPBRModel(modelLeaves, PBRTexture.loadFromFolder("grass"), 2);
+            renderableLeaves = new LODPBRModel(modelLeaves, leaf, 2);
         }
 
         LODPBRModel m = new LODPBRModel(renderable);
