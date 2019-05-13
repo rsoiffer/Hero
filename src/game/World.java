@@ -34,7 +34,8 @@ public class World extends Behavior {
     public static final double BLOCK_HEIGHT = 8 * BUILDING_SIZE + STREET_WIDTH;
 
     private static final int NUM_WALL_TYPES = 11;
-    private static final double[] WALL_SCALES = {2, 9, 3, 8, 4, 3, 3, 4, 6, 6, 10};
+    private static final double[] WALL_SCALES = {2, 9, 3, 8, 4, 3, 3, 4, 12, 12, 10};
+    private static final double[] WALL_SCALES_X = {1, 1, 1, 1, 1, 1, 1, 1, 1, .5, 1};
     private static final String[] WALL_TEXTURES = {"tower.png", "glass_0.png", "glass_1.png",
         "highrise_0.png", "highrise_1.png", "highrise_2.png", "highrise_3.png", "highrise_4.png"};
     private static final String[] WALL_PBR_TEXTURES = {"highrise_facade_1", "highrise_facade_2", "highrise_facade_3"};
@@ -80,7 +81,7 @@ public class World extends Behavior {
                         if (x != 0 || y != 0) {
                             if (!buildings.stream().anyMatch(b -> b.lower.x == x && b.lower.y == y)) {
                                 double dist2 = new Vec2d(x, y).sub(1000).lengthSquared();
-                                double height = floor(Math.random() * (50 * Math.exp(-dist2 / 160000) + 50 * heightNoise.noise2d(x, y, .005)) + 4) * FLOOR_HEIGHT;
+                                double height = floor(Math.random() * (50 * Math.exp(-dist2 / 160000) + 50 * heightNoise.noise2d(x, y, .005)) + 4) / 2 * 2 * FLOOR_HEIGHT;
                                 buildings.add(new AABB(new Vec3d(x, y, 0), new Vec3d(x + BUILDING_SIZE, y + BUILDING_SIZE, height)));
 
 //                                for (int l = 0; l < 2; l++) {
@@ -151,7 +152,7 @@ public class World extends Behavior {
         for (AABB b : sidewalks) {
             sidewalksModel.addRectangle(b.lower.setZ(b.upper.z), b.size().setY(0).setZ(0), b.size().setX(0).setZ(0),
                     new Vec2d(0, 0), new Vec2d(b.size().x / 2, 0), new Vec2d(0, b.size().y / 2));
-            createWalls(new AABB(b.lower.setZ(0), b.upper), 2, sidewalksModel);
+            createWalls(new AABB(b.lower.setZ(0), b.upper), 2, 1, sidewalksModel);
         }
         sidewalksModel.createVAO();
 
@@ -159,7 +160,7 @@ public class World extends Behavior {
         for (AABB b : parks) {
             parksModel.addRectangle(b.lower.setZ(b.upper.z), b.size().setY(0).setZ(0), b.size().setX(0).setZ(0),
                     new Vec2d(0, 0), new Vec2d(b.size().x / 2, 0), new Vec2d(0, b.size().y / 2));
-            createWalls(new AABB(b.lower.setZ(0), b.upper), 2, parksModel);
+            createWalls(new AABB(b.lower.setZ(0), b.upper), 2, 1, parksModel);
         }
         parksModel.createVAO();
 
@@ -176,7 +177,7 @@ public class World extends Behavior {
         }
         for (AABB b : buildings) {
             int i = floor(Math.random() * NUM_WALL_TYPES);
-            createWalls(b, FLOOR_HEIGHT * WALL_SCALES[i], walls[i]);
+            createWalls(b, FLOOR_HEIGHT * WALL_SCALES[i], WALL_SCALES_X[i], walls[i]);
         }
         for (int i = 0; i < NUM_WALL_TYPES; i++) {
             walls[i].createVAO();
@@ -188,7 +189,7 @@ public class World extends Behavior {
                     new Vec2d(0, 0), new Vec2d(b.size().x / 4, 0), new Vec2d(0, b.size().y / 4));
             billboardsModel.addRectangle(b.lower.setZ(b.upper.z), b.size().setY(0).setZ(0), b.size().setX(0).setZ(0),
                     new Vec2d(0, 0), new Vec2d(b.size().x / 4, 0), new Vec2d(0, b.size().y / 4));
-            createWalls(b, 4, billboardsModel);
+            createWalls(b, 4, 1, billboardsModel);
         }
         billboardsModel.createVAO();
 
@@ -218,13 +219,13 @@ public class World extends Behavior {
         return new RenderableList(parts);
     }
 
-    private void createWalls(AABB b, double scale, CustomModel m) {
+    private void createWalls(AABB b, double scale, double scaleX, CustomModel m) {
         for (int j = 0; j < 4; j++) {
             Vec3d dir = DIRS.get(j).mul(b.size());
             Vec3d dir2 = DIRS.get(j < 2 ? j + 2 : 3 - j).mul(b.size());
             Vec3d dir3 = DIRS.get(5).mul(b.size());
             Vec3d v = b.lower.add(b.size().div(2)).add(dir.div(2)).sub(dir2.div(2)).sub(dir3.div(2));
-            float texW = (float) (Math.abs(dir2.x + dir2.y + dir2.z) / scale);
+            float texW = (float) (Math.abs(dir2.x + dir2.y + dir2.z) / scale / scaleX);
             float texH = (float) (Math.abs(dir3.x + dir3.y + dir3.z) / scale);
             m.addRectangle(v, dir2, dir3, new Vec2d(0, 0), new Vec2d(texW, 0), new Vec2d(0, texH));
         }
