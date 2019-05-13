@@ -8,6 +8,7 @@ layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMRA;
+layout (location = 4) out vec3 gEmissive;
 
 // material parameters
 uniform vec3 color;
@@ -20,4 +21,5 @@ void main()
     gNormal = normalize(Normal);
     gAlbedo = color * Color;
     gMRA = vec3(metallic, roughness, 1);
+    gEmissive = vec3(0, 0, 0);
 }

@@ -10,6 +10,7 @@ layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMRA;
+layout (location = 4) out vec3 gEmissive;
 
 // material parameters
 uniform sampler2D albedoMap;
@@ -19,6 +20,7 @@ uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 uniform sampler2D heightMap;
 uniform sampler2D alphaMap;
+uniform sampler2D emissiveMap;
 
 uniform vec3 camPos;
 
@@ -90,4 +92,5 @@ void main()
     gMRA.r = texture(metallicMap, texCoords).r;
     gMRA.g = texture(roughnessMap, texCoords).r;
     gMRA.b = texture(aoMap, texCoords).r;
+    gEmissive = texture(emissiveMap, texCoords).rgb;
 }

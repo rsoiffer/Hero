@@ -30,11 +30,12 @@ public class LightingPass implements Runnable {
         SHADER_LIGHTING.setUniform("gNormal", 1);
         SHADER_LIGHTING.setUniform("gAlbedo", 2);
         SHADER_LIGHTING.setUniform("gMRA", 3);
-        SHADER_LIGHTING.setUniform("brdfLUT", 4);
+        SHADER_LIGHTING.setUniform("gEmissive", 4);
+        SHADER_LIGHTING.setUniform("brdfLUT", 5);
         for (int i = 0; i < 5; i++) {
-            SHADER_LIGHTING.setUniform("shadowMap[" + i + "]", 5 + i);
+            SHADER_LIGHTING.setUniform("shadowMap[" + i + "]", 6 + i);
         }
-        BRDF_LUT.num = 4;
+        BRDF_LUT.num = 5;
     }
 
     public Camera camera;
@@ -61,12 +62,12 @@ public class LightingPass implements Runnable {
 
         GLState.bindShader(null);
         for (int i = 0; i < spList.size(); i++) {
-            spList.get(i).bindShadowMap(5 + i);
+            spList.get(i).bindShadowMap(6 + i);
         }
 
         GLState.bindShader(null);
         for (int i = 0; i < spList.size(); i++) {
-            glActiveTexture(GL_TEXTURE0 + 5 + i);
+            glActiveTexture(GL_TEXTURE0 + 6 + i);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
@@ -81,7 +82,7 @@ public class LightingPass implements Runnable {
 
         GLState.bindShader(null);
         for (int i = 0; i < spList.size(); i++) {
-            spList.get(i).bindShadowMap(5 + i);
+            spList.get(i).bindShadowMap(6 + i);
         }
         SHADER_LIGHTING.setUniform("sunColor", sunColor);
         SHADER_LIGHTING.setUniform("sunDirection", sunDirection);
@@ -97,7 +98,7 @@ public class LightingPass implements Runnable {
 
         GLState.bindShader(null);
         for (int i = 0; i < spList.size(); i++) {
-            glActiveTexture(GL_TEXTURE0 + 5 + i);
+            glActiveTexture(GL_TEXTURE0 + 6 + i);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 

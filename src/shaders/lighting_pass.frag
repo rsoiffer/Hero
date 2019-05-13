@@ -9,6 +9,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform sampler2D gMRA;
+uniform sampler2D gEmissive;
 
 // lights
 uniform vec3 sunColor;
@@ -103,7 +104,7 @@ vec3 CalculateLighting(vec3 Normal, vec3 Albedo, float Metallic, float Roughness
 vec3 FakeIrradiance(vec3 dir, float roughness)
 {
     float x = tanh(cos(dir.z) / (roughness + .01));
-    return mix(vec3(.4, .7, 1), vec3(.3, .3, .3), x) * .1;
+    return mix(vec3(.4, .7, 1), vec3(.3, .3, .3), x) * .15;
 }
 // ----------------------------------------------------------------------------
 vec3 rgb2hsv(vec3 c)
@@ -132,12 +133,13 @@ void main()
     float Metallic = texture(gMRA, TexCoords).r;
     float Roughness = texture(gMRA, TexCoords).g;
     float AO = texture(gMRA, TexCoords).b;
+    vec3 Emissive = texture(gEmissive, TexCoords).rgb;
 
     if (length(Normal) == 0) discard;
     vec3 viewDir = normalize(camPos - FragPos);
     vec3 reflectDir = reflect(-viewDir, Normal);
     vec3 F0 = mix(vec3(0.04), Albedo, Metallic);
-    vec3 color = vec3(0.0);
+    vec3 color = Emissive * 0.2;
     if (dot(Normal, viewDir) < 0) {
         Normal = -Normal;
     }

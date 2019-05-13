@@ -25,7 +25,7 @@ public class Stem {
     public static final double QUALITY = 1;
 
     private static final PBRTexture bark = PBRTexture.loadFromFolder("bark");
-    private static final PBRTexture leaf = PBRTexture.loadFromFolder("grass");
+    private static final PBRTexture leaf = PBRTexture.loadFromFolder("leaf_maple");
 
     private final int Shape = 4;
     private final double BaseSize = 0.2;
@@ -72,7 +72,6 @@ public class Stem {
     public LODPBRModel renderableLeaves;
 
     // Trunk-only data
-    public double scaleTree;
     public double lengthBase;
 
     private Stem(Stem parent, double offsetChild, Vec3d basePos, Quaternion baseDir) {
@@ -80,7 +79,7 @@ public class Stem {
         level = parent == null ? 0 : parent.level + 1;
 
         if (level == 0) {
-            scaleTree = Scale + pm() * ScaleV;
+            double scaleTree = Scale + pm() * ScaleV;
             lengthBase = BaseSize * scaleTree;
             myLength = (Length[level] + pm() * LengthV[level]) * scaleTree;
 
@@ -192,8 +191,6 @@ public class Stem {
             for (int i = 0; i < leaves.size(); i++) {
                 Vec3d pos = leaves.get(i);
                 Quaternion dir = leafDirs.get(i);
-                double length = LeafScale / Math.sqrt(QUALITY);
-                double width = LeafScale * LeafScaleX / Math.sqrt(QUALITY);
 
                 double bend = 1;
                 Vec3d normal = dir.applyTo(new Vec3d(1, 0, 0));
@@ -207,20 +204,32 @@ public class Stem {
                 dir = rotateX(dir, bend * phiBend);
                 dir = rotateZ(dir, orientation);
 
-                Vec3d tip = pos.add(dir.applyTo(new Vec3d(0, 0, length)));
-                Vec3d p = pos.add(dir.applyTo(new Vec3d(0, -0.5 * width, length * .25)));
-                Vec3d edge1 = dir.applyTo(new Vec3d(0, width, 0));
-                Vec3d edge2 = dir.applyTo(new Vec3d(0, 0, length * .5));
-                model.addRectangle(p, edge1, edge2, new Vec2d(0, 0), new Vec2d(1, 0), new Vec2d(0, 1));
-
-                model.addTriangle(pos, new Vec2d(.5, -.5), p, new Vec2d(0, 0), p.add(edge1), new Vec2d(1, 0));
-                model.addTriangle(tip, new Vec2d(.5, 1.5), p.add(edge2), new Vec2d(0, 1), p.add(edge1).add(edge2), new Vec2d(1, 1));
+                createLeaf(model, pos, dir);
             }
         }
 
         if (children != null) {
             children.forEach(c -> c.addToModelLeaves(model));
         }
+    }
+
+    private void createLeaf(CustomModel model, Vec3d pos, Quaternion dir) {
+        double length = LeafScale / Math.sqrt(QUALITY);
+        double width = LeafScale * LeafScaleX / Math.sqrt(QUALITY);
+
+        Vec3d p = pos.add(dir.applyTo(new Vec3d(0, -0.5 * width, 0)));
+        Vec3d edge1 = dir.applyTo(new Vec3d(0, width, 0));
+        Vec3d edge2 = dir.applyTo(new Vec3d(0, 0, length));
+        model.addRectangle(p, edge1, edge2, new Vec2d(150 / 512., (512 - 200) / 512.),
+                new Vec2d(120 / 512., 0), new Vec2d(0, 200 / 512.));
+
+//        Vec3d tip = pos.add(dir.applyTo(new Vec3d(0, 0, length)));
+//        Vec3d p = pos.add(dir.applyTo(new Vec3d(0, -0.5 * width, length * .25)));
+//        Vec3d edge1 = dir.applyTo(new Vec3d(0, width, 0));
+//        Vec3d edge2 = dir.applyTo(new Vec3d(0, 0, length * .5));
+//        model.addRectangle(p, edge1, edge2, new Vec2d(0, 0), new Vec2d(1, 0), new Vec2d(0, 1));
+//        model.addTriangle(pos, new Vec2d(.5, -.5), p, new Vec2d(0, 0), p.add(edge1), new Vec2d(1, 0));
+//        model.addTriangle(tip, new Vec2d(.5, 1.5), p.add(edge2), new Vec2d(0, 1), p.add(edge1).add(edge2), new Vec2d(1, 1));
     }
 
     private void createTube(Vec3d basePos, Quaternion baseDir) {

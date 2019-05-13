@@ -19,6 +19,7 @@ import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT1;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT2;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT3;
+import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT4;
 import static org.lwjgl.opengl.GL30.GL_RGB16F;
 import static org.lwjgl.opengl.GL30.GL_RGB32F;
 import util.math.Transformation;
@@ -38,12 +39,13 @@ public class GeometryPass implements Runnable {
         SHADER_PBR.setUniform("aoMap", 4);
         SHADER_PBR.setUniform("heightMap", 5);
         SHADER_PBR.setUniform("alphaMap", 6);
+        SHADER_PBR.setUniform("emissiveMap", 7);
     }
 
     public Camera camera;
 
     private final Framebuffer gBuffer;
-    private final Texture gPosition, gNormal, gAlbedo, gMRA;
+    private final Texture gPosition, gNormal, gAlbedo, gMRA, gEmissive;
 
     public GeometryPass(Vec2d framebufferSize) {
         if (framebufferSize == null) {
@@ -56,7 +58,8 @@ public class GeometryPass implements Runnable {
         gNormal = gBuffer.attachTexture(GL_RGB16F, GL_RGB, GL_FLOAT, GL_NEAREST, GL_COLOR_ATTACHMENT1);
         gAlbedo = gBuffer.attachTexture(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_NEAREST, GL_COLOR_ATTACHMENT2);
         gMRA = gBuffer.attachTexture(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_NEAREST, GL_COLOR_ATTACHMENT3);
-        glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
+        gEmissive = gBuffer.attachTexture(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_NEAREST, GL_COLOR_ATTACHMENT4);
+        glDrawBuffers(new int[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4});
         gBuffer.attachDepthRenderbuffer();
         GLState.bindFramebuffer(null);
 
@@ -64,10 +67,11 @@ public class GeometryPass implements Runnable {
         gNormal.num = 1;
         gAlbedo.num = 2;
         gMRA.num = 3;
+        gEmissive.num = 4;
     }
 
     public void bindGBuffer() {
-        bindAll(gPosition, gNormal, gAlbedo, gMRA);
+        bindAll(gPosition, gNormal, gAlbedo, gMRA, gEmissive);
     }
 
     @Override

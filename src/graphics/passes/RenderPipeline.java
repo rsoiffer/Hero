@@ -21,8 +21,8 @@ import vr.Vive;
 public class RenderPipeline extends Behavior {
 
     public Color skyColor = new Color(.4, .7, 1, 1);
-    public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.4);
-    public Vec3d sunDirection = new Vec3d(.4, -.2, 1);
+    public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.35);
+    public Vec3d sunDirection = new Vec3d(.3, -.15, 1);
     public boolean isVR;
 
     private List<Camera> cameras;
