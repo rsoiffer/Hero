@@ -352,12 +352,12 @@ public class Stem {
             addToModel(model);
 //            model.smoothVertexNormals();
             model.createVAO();
-            renderable = new LODPBRModel(model, bark, 2);
+            renderable = new LODPBRModel(model, bark, 4);
 
             CustomModel modelLeaves = new CustomModel();
             addToModelLeaves(modelLeaves);
             modelLeaves.createVAO();
-            renderableLeaves = new LODPBRModel(modelLeaves, leaf, 2);
+            renderableLeaves = new LODPBRModel(modelLeaves, leaf, 4);
         }
 
         LODPBRModel m = new LODPBRModel(renderable);

@@ -139,7 +139,7 @@ void main()
     vec3 viewDir = normalize(camPos - FragPos);
     vec3 reflectDir = reflect(-viewDir, Normal);
     vec3 F0 = mix(vec3(0.04), Albedo, Metallic);
-    vec3 color = Emissive * 0.2;
+    vec3 color = Emissive / (2 * PI);
     if (dot(Normal, viewDir) < 0) {
         Normal = -Normal;
     }

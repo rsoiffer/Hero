@@ -13,11 +13,14 @@ import static game.World.BLOCK_WIDTH;
 import graphics.Camera;
 import graphics.passes.RenderPipeline;
 import util.Mutable;
+import static util.math.MathUtils.floor;
+import static util.math.MathUtils.mod;
+import util.math.Vec2d;
 import util.math.Vec3d;
 import vr.Vive;
 import vr.ViveInput;
-import static vr.ViveInput.GRIP;
 import static vr.ViveInput.MENU;
+import static vr.ViveInput.TRACKPAD;
 
 public class MainVR {
 
@@ -58,17 +61,21 @@ public class MainVR {
 //            Wing.class, Hand.class, Explosion.class, Teleport.class};
         Class[] c = {WebSlinger.class, Thruster.class, IceCaster.class,
             Wing.class, Hand.class, Teleport.class};
-        Mutable<Integer> leftType = new Mutable(0);
+        Mutable<Integer> leftType = new Mutable(1);
         Mutable<Behavior> left = new Mutable(null);
-        Mutable<Integer> rightType = new Mutable(0);
+        Mutable<Integer> rightType = new Mutable(1);
         Mutable<Behavior> right = new Mutable(null);
 
         UPDATE.onStep(() -> {
-            if (left.o == null || ViveInput.LEFT.buttonJustPressed(GRIP)) {
+            if (ViveInput.LEFT.buttonJustPressed(TRACKPAD)) {
                 if (left.o != null) {
                     left.o.destroy();
+                    left.o = null;
                 }
-                leftType.o = (leftType.o + 1) % c.length;
+                Vec2d v = ViveInput.LEFT.trackpad();
+                leftType.o = floor(mod(Math.atan2(v.y, v.x) / (2 * Math.PI), 1) * c.length);
+            }
+            if (left.o == null) {
                 try {
                     left.o = (Behavior) c[leftType.o].newInstance();
                 } catch (InstantiationException | IllegalAccessException ex) {
@@ -78,11 +85,15 @@ public class MainVR {
                 left.o.get(ControllerBehavior.class).player = p;
                 left.o.create();
             }
-            if (right.o == null || ViveInput.RIGHT.buttonJustPressed(GRIP)) {
+            if (ViveInput.RIGHT.buttonJustPressed(TRACKPAD)) {
                 if (right.o != null) {
                     right.o.destroy();
+                    right.o = null;
                 }
-                rightType.o = (rightType.o + 1) % c.length;
+                Vec2d v = ViveInput.RIGHT.trackpad();
+                rightType.o = floor(mod(Math.atan2(v.y, -v.x) / (2 * Math.PI), 1) * c.length);
+            }
+            if (right.o == null) {
                 try {
                     right.o = (Behavior) c[rightType.o].newInstance();
                 } catch (InstantiationException | IllegalAccessException ex) {

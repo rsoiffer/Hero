@@ -58,7 +58,7 @@ public class Player extends Behavior {
         if (cameraOffset != null) {
             Camera.camera3d.position = position.position.add(cameraOffset);
         }
-        double friction = physics.onGround ? 2 : .01;
+        double friction = physics.onGround ? 2 : 1e-6;
         velocity.velocity = velocity.velocity.mul(Math.exp(-dt() * friction));
         if (physics.velocityChange.lengthSquared() > 10) {
             if (Vive.running) {
