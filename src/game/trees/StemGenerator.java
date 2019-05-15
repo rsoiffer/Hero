@@ -16,9 +16,9 @@ public class StemGenerator {
     public List<CollisionShape> collisionShapes() {
         List<CollisionShape> r = new LinkedList();
         for (int i = 0; i < treeInstances.size(); i++) {
-            Stem tb = treeInstances.get(i);
+            Stem s = treeInstances.get(i);
             for (Vec3d v : treePlacements.get(i)) {
-                tb.getCollisionShapes(v).forEach(r::add);
+                s.getCollisionShapes(v).forEach(r::add);
             }
         }
         return r;
@@ -27,8 +27,8 @@ public class StemGenerator {
     public void generateInstances(int num) {
         num = 8;
         for (int i = 0; i < num; i++) {
-            Stem tb = Stem.generateTree();
-            treeInstances.add(tb);
+            Stem s = Stem.generateTree();
+            treeInstances.add(s);
             treePlacements.add(new LinkedList());
         }
         System.out.println("Done generating");
@@ -42,17 +42,17 @@ public class StemGenerator {
     public List<Renderable> renderables() {
         List<Renderable> r = new LinkedList();
         for (int i = 0; i < treeInstances.size(); i++) {
-            Stem tb = treeInstances.get(i);
+            Stem s = treeInstances.get(i);
             for (Vec3d v : treePlacements.get(i)) {
-                r.add(tb.getRenderable(v));
+                r.add(s.getRenderable(v));
             }
         }
-//        for (int i = 0; i < treeInstances.size(); i++) {
-//            TreeBranch tb = treeInstances.get(i);
-//            for (Vec3d v : treePlacements.get(i)) {
-//                r.add(tb.getLeafRenderable(v));
-//            }
-//        }
+        for (int i = 0; i < treeInstances.size(); i++) {
+            Stem s = treeInstances.get(i);
+            for (Vec3d v : treePlacements.get(i)) {
+                r.add(s.getRenderableLeaves(v));
+            }
+        }
         return r;
     }
 }

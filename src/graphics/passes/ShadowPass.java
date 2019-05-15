@@ -6,6 +6,7 @@ import graphics.opengl.Framebuffer;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
+import graphics.passes.RenderPipeline.RenderPass;
 import java.util.LinkedList;
 import java.util.List;
 import org.joml.Matrix4d;
@@ -34,7 +35,7 @@ import physics.AABB;
 import util.math.Transformation;
 import util.math.Vec3d;
 
-public class ShadowPass implements Runnable {
+public class ShadowPass implements RenderPass {
 
     public static final Shader SHADER_SHADOW = Shader.load("shadow_pass");
     public static final Shader SHADER_SHADOW_ALPHA = Shader.load("shadow_pass_alpha");
@@ -42,6 +43,8 @@ public class ShadowPass implements Runnable {
     static {
         SHADER_SHADOW_ALPHA.setUniform("alphaMap", 6);
     }
+
+    public static ShadowPass current;
 
     public List<Camera> cameras;
     public double zMin = -1, zMax = 1;

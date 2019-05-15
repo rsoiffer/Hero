@@ -8,6 +8,7 @@ import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
+import graphics.passes.RenderPipeline.RenderPass;
 import static org.lwjgl.opengl.GL11C.GL_BLEND;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
@@ -25,7 +26,7 @@ import static org.lwjgl.opengl.GL30.GL_RGB32F;
 import util.math.Transformation;
 import util.math.Vec2d;
 
-public class GeometryPass implements Runnable {
+public class GeometryPass implements RenderPass {
 
     public static final Shader SHADER_COLOR = Shader.load("geometry_pass_color");
     public static final Shader SHADER_DIFFUSE = Shader.load("geometry_pass_diffuse");

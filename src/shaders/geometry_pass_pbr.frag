@@ -23,10 +23,16 @@ uniform sampler2D alphaMap;
 uniform sampler2D emissiveMap;
 
 uniform vec3 camPos;
+uniform float lod;
 
 uniform float heightScale = 0.01;
 uniform float heightOffset = 0.5;
 
+// ----------------------------------------------------------------------------
+float rand(vec2 co)
+{
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 // ----------------------------------------------------------------------------
 vec2 ParallaxMapping(vec2 texCoords, vec3 N, vec3 viewDir)
 {
@@ -73,6 +79,9 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 N, vec3 viewDir)
 void main()
 {
     if (texture(alphaMap, TexCoords).r < .5) {
+        discard;
+    }
+    if (floor(rand(gl_FragCoord.xy) + lod) != 0) {
         discard;
     }
 

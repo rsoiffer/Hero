@@ -8,6 +8,7 @@ import static graphics.opengl.GLObject.bindAll;
 import graphics.opengl.GLState;
 import graphics.opengl.Shader;
 import graphics.opengl.Texture;
+import graphics.passes.RenderPipeline.RenderPass;
 import java.util.List;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLE_FAN;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
@@ -20,7 +21,7 @@ import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 import util.math.Vec2d;
 import util.math.Vec3d;
 
-public class LightingPass implements Runnable {
+public class LightingPass implements RenderPass {
 
     private static final Shader SHADER_LIGHTING = Shader.load("lighting_pass");
     private static final Texture BRDF_LUT = Texture.load("brdf_lut.png");
@@ -98,8 +99,7 @@ public class LightingPass implements Runnable {
 
         GLState.bindShader(null);
         for (int i = 0; i < spList.size(); i++) {
-            glActiveTexture(GL_TEXTURE0 + 6 + i);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            GLState.bindTexture(null, 6 + i);
         }
 
         GLState.bindFramebuffer(null);

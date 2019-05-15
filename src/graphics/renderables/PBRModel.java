@@ -23,6 +23,7 @@ public class PBRModel extends Renderable {
     public void renderGeom() {
         bindAll(SHADER_PBR, tex);
         setTransform(t);
+        SHADER_PBR.setUniform("lod", 0f);
         model.render();
     }
 
@@ -30,6 +31,7 @@ public class PBRModel extends Renderable {
     public void renderShadow() {
         if (tex.hasAlpha()) {
             bindAll(SHADER_SHADOW_ALPHA, tex);
+            SHADER_SHADOW_ALPHA.setUniform("lod", 0f);
         } else {
             bindAll(SHADER_SHADOW);
         }

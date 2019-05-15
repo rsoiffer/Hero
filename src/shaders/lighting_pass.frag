@@ -42,6 +42,19 @@ float ShadowCalculation(vec3 FragPos, vec3 Normal)
             float bias = max(0.01 * (1.0 - dot(Normal, lightDir)), 0.001);
             float currentDepth = projCoords.z - bias;
             shadow = texture(shadowMap[i], vec3(projCoords.xy, currentDepth));
+            if (i < NUM_CASCADES - 1) {
+                float z1 = log(1 - cascadeEndClipSpace[i]);
+                float z2 = log(1 - cascadeEndClipSpace[i+1]);
+                float amt = 10 * (log(1 - projZ) - z1) / (z1 - z2);
+                if (amt < 1) {
+                    vec4 fragPosLightSpace2 = lightSpaceMatrix[i+1] * vec4(FragPos, 1.0);
+                    vec3 projCoords2 = fragPosLightSpace2.xyz / fragPosLightSpace2.w;
+                    projCoords2 = projCoords2 * 0.5 + 0.5;
+                    float currentDepth2 = projCoords2.z - bias;
+                    float shadow2 = texture(shadowMap[i+1], vec3(projCoords2.xy, currentDepth2));
+                    shadow = mix(shadow2, shadow, amt);
+                }
+            }
             break;
         }
     }

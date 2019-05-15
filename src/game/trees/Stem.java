@@ -4,7 +4,6 @@ import graphics.PBRTexture;
 import graphics.models.CustomModel;
 import graphics.renderables.LODPBRModel;
 import graphics.renderables.Renderable;
-import graphics.renderables.RenderableList;
 import static java.lang.Double.NaN;
 import java.util.ArrayList;
 import java.util.List;
@@ -149,9 +148,11 @@ public class Stem {
         }
     }
 
-    private void addToModel(CustomModel model) {
+    private void addToModel(CustomModel model, int maxLevel) {
+        if (level >= maxLevel) {
+            return;
+        }
         int detail = 12 / (level + 1);
-
         List<Vec3d> dirs1 = new ArrayList(), dirs2 = new ArrayList();
         for (int i = 0; i < tube.size(); i++) {
             dirs1.add(tubeDirs.get(Math.min(i, tubeDirs.size() - 1)).applyTo(new Vec3d(1, 0, 0)));
@@ -180,15 +181,17 @@ public class Stem {
             }
             texH += dTexH;
         }
-
         if (children != null) {
-            children.forEach(c -> c.addToModel(model));
+            children.forEach(c -> c.addToModel(model, maxLevel));
         }
     }
 
-    private void addToModelLeaves(CustomModel model) {
+    private void addToModelLeaves(CustomModel model, double scale) {
         if (leaves != null) {
             for (int i = 0; i < leaves.size(); i++) {
+                if (Math.random() > 1 / (scale * scale)) {
+                    continue;
+                }
                 Vec3d pos = leaves.get(i);
                 Quaternion dir = leafDirs.get(i);
 
@@ -204,18 +207,17 @@ public class Stem {
                 dir = rotateX(dir, bend * phiBend);
                 dir = rotateZ(dir, orientation);
 
-                createLeaf(model, pos, dir);
+                createLeaf(model, pos, dir, scale);
             }
         }
-
         if (children != null) {
-            children.forEach(c -> c.addToModelLeaves(model));
+            children.forEach(c -> c.addToModelLeaves(model, scale));
         }
     }
 
-    private void createLeaf(CustomModel model, Vec3d pos, Quaternion dir) {
-        double length = LeafScale / Math.sqrt(QUALITY);
-        double width = LeafScale * LeafScaleX / Math.sqrt(QUALITY);
+    private void createLeaf(CustomModel model, Vec3d pos, Quaternion dir, double scale) {
+        double length = LeafScale / Math.sqrt(QUALITY) * scale;
+        double width = length * LeafScaleX;
 
         Vec3d p = pos.add(dir.applyTo(new Vec3d(0, -0.5 * width, 0)));
         Vec3d edge1 = dir.applyTo(new Vec3d(0, width, 0));
@@ -348,22 +350,33 @@ public class Stem {
 
     public Renderable getRenderable(Vec3d pos) {
         if (renderable == null) {
-            CustomModel model = new CustomModel();
-            addToModel(model);
-//            model.smoothVertexNormals();
-            model.createVAO();
-            renderable = new LODPBRModel(model, bark, 4);
-
-            CustomModel modelLeaves = new CustomModel();
-            addToModelLeaves(modelLeaves);
-            modelLeaves.createVAO();
-            renderableLeaves = new LODPBRModel(modelLeaves, leaf, 4);
+            List<CustomModel> l = new ArrayList();
+            for (int i = 0; i < 5; i++) {
+                CustomModel model = new CustomModel();
+                addToModel(model, Math.max(4 - i, 1));
+                model.createVAO();
+                l.add(model);
+            }
+            renderable = new LODPBRModel(l, bark);
         }
-
         LODPBRModel m = new LODPBRModel(renderable);
         m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
-        LODPBRModel ml = new LODPBRModel(renderableLeaves);
-        ml.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
-        return new RenderableList(m, ml);
+        return m;
+    }
+
+    public Renderable getRenderableLeaves(Vec3d pos) {
+        if (renderableLeaves == null) {
+            List<CustomModel> l = new ArrayList();
+            for (int i = 0; i < 5; i++) {
+                CustomModel modelLeaves = new CustomModel();
+                addToModelLeaves(modelLeaves, Math.pow(2, i));
+                modelLeaves.createVAO();
+                l.add(modelLeaves);
+            }
+            renderableLeaves = new LODPBRModel(l, leaf);
+        }
+        LODPBRModel m = new LODPBRModel(renderableLeaves);
+        m.t = Transformation.create(pos, Quaternion.IDENTITY, 1);
+        return m;
     }
 }

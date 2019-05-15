@@ -20,6 +20,16 @@ import vr.Vive;
 
 public class RenderPipeline extends Behavior {
 
+    public interface RenderPass extends Runnable {
+
+        public default void doPass() {
+            currentPass = this;
+            run();
+        }
+    }
+
+    public static RenderPass currentPass;
+
     public Color skyColor = new Color(.4, .7, 1, 1);
     public Vec3d sunColor = new Vec3d(10, 9, 8).mul(.35);
     public Vec3d sunDirection = new Vec3d(.3, -.15, 1);
@@ -69,9 +79,9 @@ public class RenderPipeline extends Behavior {
         if (isVR) {
             EyeCamera.waitUpdatePos(Camera.camera3d.position);
         }
-        gpList.forEach(Runnable::run);
-        spList.forEach(Runnable::run);
-        lpList.forEach(Runnable::run);
+        gpList.forEach(RenderPass::doPass);
+        spList.forEach(RenderPass::doPass);
+        lpList.forEach(RenderPass::doPass);
         if (isVR) {
             Vive.submit(true, lpList.get(0).colorBuffer());
             Vive.submit(false, lpList.get(1).colorBuffer());
