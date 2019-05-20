@@ -1,4 +1,4 @@
-package physics;
+package physics.shapes;
 
 import java.util.Collection;
 import java.util.Comparator;

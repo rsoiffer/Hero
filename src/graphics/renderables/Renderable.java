@@ -18,6 +18,6 @@ public abstract class Renderable {
     }
 
     void setTransform(Transformation t) {
-        setTransform(t.modelMatrix());
+        setTransform(t.matrix());
     }
 }

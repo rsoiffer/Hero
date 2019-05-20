@@ -6,8 +6,9 @@ import engine.Layer;
 import static game.Player.POSTPHYSICS;
 import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
+import static util.math.MathUtils.clamp;
 import util.math.Vec3d;
-import vr.ViveInput;
+import vr.Vive;
 
 public class Wing extends Behavior {
 
@@ -18,7 +19,7 @@ public class Wing extends Behavior {
     @Override
     public void createInner() {
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_wing.vox"));
-        if (controller.controller == ViveInput.LEFT) {
+        if (controller.controller == Vive.LEFT) {
             controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_wing_left.vox"));
         }
         controller.modelOffset = new Vec3d(16, 40, 2);
@@ -31,29 +32,34 @@ public class Wing extends Behavior {
 
     @Override
     public void step() {
-        Vec3d sideways = controller.controller.sideways();
-        if (controller.controller != ViveInput.LEFT) {
+        Vec3d sideways = controller.sideways();
+        if (controller.controller != Vive.LEFT) {
             sideways = sideways.mul(-1);
         }
-        Vec3d pos = controller.pos(5).add(sideways.mul(1.5));
+        // Vec3d pos = controller.pos(5).add(sideways.mul(1.5));
+        Vec3d pos = controller.pos().add(sideways.mul(.5));
 
         if (prevPos != null) {
-            Vec3d motion = pos.sub(prevPos);
-            if (motion.lengthSquared() >= 1e-6) {
-                Vec3d wingUp = controller.controller.transform(new Vec3d(0, 0, 1));
-                double C = -motion.normalize().dot(wingUp);
-                if (C < 0) {
-                    C *= .2;
+            Vec3d wingVel = pos.sub(prevPos).div(dt());
+            if (wingVel.lengthSquared() >= 1e-6) {
+                Vec3d wingUp = controller.upwards();
+                double C = -wingVel.normalize().dot(wingUp);
+//                if (C < 0) {
+//                    C *= .2;
+//                }
+                double strength = 10 * C * wingVel.lengthSquared();
+                if (Math.abs(strength) > 1e5) {
+                    System.out.println(strength);
                 }
-                double strength = 8 * C * motion.lengthSquared() / dt();
-                controller.player.applyForce(wingUp.mul(strength), 0);
+                strength = clamp(strength, -1e5, 1e5);
+                controller.player.physics.applyForce(wingUp.mul(strength), pos);
             }
         }
         prevPos = pos;
 
         if (!controller.player.physics.onGround) {
-            double thrustStrength = 2;
-            controller.player.applyForce(controller.controller.forwards().mul(thrustStrength), 0.05);
+            double thrustStrength = 200;
+            controller.player.physics.applyForce(controller.forwards().mul(thrustStrength), pos);
         }
     }
 }

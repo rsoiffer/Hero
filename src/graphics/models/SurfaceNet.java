@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import physics.AABB;
+import physics.shapes.AABB;
 import static util.math.MathUtils.ceil;
 import static util.math.MathUtils.clamp;
 import static util.math.MathUtils.floor;

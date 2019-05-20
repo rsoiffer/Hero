@@ -10,7 +10,7 @@ import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
 import util.math.Transformation;
 import util.math.Vec3d;
-import static vr.ViveInput.TRIGGER;
+import static vr.Vive.TRIGGER;
 
 public class Hookshot extends Behavior {
 
@@ -54,7 +54,7 @@ public class Hookshot extends Behavior {
     public void step() {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             hookPos = controller.pos();
-            hookVel = controller.controller.forwards().mul(100);
+            hookVel = controller.forwards().mul(100);
         }
         if (controller.controller.buttonJustReleased(TRIGGER)) {
             hookPos = null;
@@ -66,8 +66,8 @@ public class Hookshot extends Behavior {
                 grabbing = controller.player.physics.world.collisionShape.contains(hookPos);
             } else {
                 Vec3d pullDir = hookPos.sub(controller.pos()).normalize();
-                pullDir = pullDir.lerp(controller.controller.forwards(), .2);
-                controller.player.velocity.velocity = controller.player.velocity.velocity.lerp(
+                pullDir = pullDir.lerp(controller.forwards(), .2);
+                controller.player.physics.velocity = controller.player.physics.velocity.lerp(
                         pullDir.mul(40), 1 - Math.exp(-1 * dt()));
             }
         }

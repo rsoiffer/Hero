@@ -5,6 +5,7 @@ import behaviors.QuitOnEscapeBehavior;
 import engine.Core;
 import engine.Input;
 import engine.Settings;
+import game.FrozoneAI;
 import game.Player;
 import game.World;
 import static game.World.BLOCK_HEIGHT;
@@ -49,8 +50,8 @@ public class Main {
 //        UPDATE.onStep(() -> gun.t = Transformation.create(camera3d.position.add(camera3d.facing().mul(2)),
 //                Quaternion.fromEulerAngles(camera3d.horAngle, camera3d.vertAngle, 0), .01));
 //        createRB(gun);
-        Frozone f = new Frozone();
-        f.player.position.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
+        FrozoneAI f = new FrozoneAI();
+        f.player.pose.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
         f.player.physics.world = world;
         f.create();
 
@@ -91,6 +92,6 @@ public class Main {
         if (Input.keyDown(GLFW_KEY_LEFT_SHIFT)) {
             vel = vel.add(camera3d.up.setLength(-flySpeed));
         }
-        p.velocity.velocity = vel;
+        p.physics.velocity = vel;
     }
 }

@@ -1,11 +1,11 @@
-package game.pc;
+package game;
 
 import engine.Behavior;
 import static engine.Core.dt;
 import engine.Input;
 import engine.Layer;
 import static engine.Layer.PREUPDATE;
-import game.Player;
+import game.pc.Main;
 import static game.vr.IceCaster.iceModel;
 import static graphics.Camera.camera3d;
 import graphics.SDF;
@@ -17,12 +17,12 @@ import java.util.Random;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
-import physics.AABB;
+import physics.shapes.AABB;
 import util.math.MathUtils;
 import static util.math.MathUtils.clamp;
 import util.math.Vec3d;
 
-public class Frozone extends Behavior {
+public class FrozoneAI extends Behavior {
 
     public final Player player = require(Player.class);
 
@@ -68,20 +68,20 @@ public class Frozone extends Behavior {
         timer += dt();
         timer2 += dt();
 
-        double height = player.physics.world.raycastDown(player.position.position);
+        double height = player.physics.world.raycastDown(player.pose.position);
         double speedMod = 8 + 50 * Math.pow(.7, height);
 
-        Vec3d side = player.velocity.velocity.add(MathUtils.randomInSphere(new Random()).mul(1e-12)).cross(new Vec3d(0, 0, 1));
+        Vec3d side = player.physics.velocity.add(MathUtils.randomInSphere(new Random()).mul(1e-12)).cross(new Vec3d(0, 0, 1));
 
         Vec3d accel = vel.add(side.mul(.1 * Math.sin(5 * timer))).add(new Vec3d(0, 0, speedMod));
-        player.velocity.velocity = player.velocity.velocity.add(accel.mul(dt()));
-        if (player.velocity.velocity.length() > 20) {
-            player.velocity.velocity = player.velocity.velocity.setLength(20);
+        player.physics.velocity = player.physics.velocity.add(accel.mul(dt()));
+        if (player.physics.velocity.length() > 20) {
+            player.physics.velocity = player.physics.velocity.setLength(20);
         }
 
         if (timer2 > 0) {
             timer2 -= 1 / 30.;
-            createIce(player.position.position, player.position.position.add(player.velocity.velocity.mul(.3)), accel);
+            createIce(player.pose.position, player.pose.position.add(player.physics.velocity.mul(.3)), accel);
         }
     }
 
@@ -108,7 +108,7 @@ public class Frozone extends Behavior {
                 moveTowards(camera3d.facing().mul(speed));
             }
         } else {
-            moveTowards(camera3d.position.sub(player.position.position).setLength(15));
+            moveTowards(camera3d.position.sub(player.pose.position).setLength(15));
         }
     }
 }

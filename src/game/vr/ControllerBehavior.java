@@ -5,12 +5,10 @@ import engine.Layer;
 import static engine.Layer.POSTUPDATE;
 import game.Player;
 import game.RenderableBehavior;
-import graphics.Camera;
 import graphics.renderables.ColorModel;
-import org.joml.Matrix4d;
 import util.math.Transformation;
 import util.math.Vec3d;
-import vr.ViveInput.ViveController;
+import vr.ViveController;
 
 public class ControllerBehavior extends Behavior {
 
@@ -22,12 +20,24 @@ public class ControllerBehavior extends Behavior {
     public Player player;
     public Vec3d modelOffset = new Vec3d(4, 4, 4);
 
+    public Transformation controllerPose() {
+        return controller.pose();
+    }
+
+    public Transformation controllerPose(double exaggeration) {
+        return vrCoords()
+                .translate(OFFSET.mul(-1))
+                .scale(exaggeration)
+                .translate(OFFSET)
+                .mul(controller.poseRaw());
+    }
+
+    public Vec3d forwards() {
+        return controllerPose().applyRotation(new Vec3d(1, 0, 0));
+    }
+
     public Transformation getTransform() {
-        return new Transformation(new Matrix4d()
-                .translate(Camera.camera3d.position.toJOML())
-                .mul(controller.pose())
-                .scale(1 / 32.)
-                .translate(modelOffset.mul(-1).toJOML()));
+        return controllerPose().scale(1 / 32.).translate(modelOffset.mul(-1));
     }
 
     @Override
@@ -36,16 +46,27 @@ public class ControllerBehavior extends Behavior {
     }
 
     public Vec3d pos() {
-        return Camera.camera3d.position.add(controller.position());
+        return controllerPose().position();
     }
 
     public Vec3d pos(double exaggeration) {
-        return Camera.camera3d.position.add(controller.position()
-                .sub(OFFSET).mul(exaggeration).add(OFFSET));
+        return controllerPose(exaggeration).position();
+    }
+
+    public Vec3d sideways() {
+        return controllerPose().applyRotation(new Vec3d(0, 1, 0));
     }
 
     @Override
     public void step() {
         ((ColorModel) renderable.renderable).t = getTransform();
+    }
+
+    public Vec3d upwards() {
+        return controllerPose().applyRotation(new Vec3d(0, 0, 1));
+    }
+
+    public Transformation vrCoords() {
+        return player.pose.getTransform().translate(new Vec3d(0, 0, -1));
     }
 }

@@ -4,7 +4,7 @@ import graphics.renderables.Renderable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import physics.CollisionShape;
+import physics.shapes.CollisionShape;
 import static util.math.MathUtils.floor;
 import util.math.Vec3d;
 

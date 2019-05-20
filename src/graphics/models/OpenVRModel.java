@@ -23,7 +23,7 @@ import org.lwjgl.system.MemoryStack;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import util.math.Vec2d;
 import util.math.Vec3d;
-import vr.ViveInput.ViveController;
+import vr.ViveController;
 
 public class OpenVRModel implements Model {
 

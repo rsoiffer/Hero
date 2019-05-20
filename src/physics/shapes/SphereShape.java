@@ -1,4 +1,4 @@
-package physics;
+package physics.shapes;
 
 import java.util.OptionalDouble;
 import util.math.Vec3d;

@@ -1,7 +1,5 @@
 package game.vr;
 
-import behaviors._3d.PositionBehavior3d;
-import behaviors._3d.VelocityBehavior3d;
 import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
@@ -19,7 +17,9 @@ import graphics.renderables.ColorModel;
 import graphics.renderables.PBRModel;
 import graphics.renderables.Renderable;
 import java.util.Arrays;
-import physics.AABB;
+import physics.PhysicsBehavior;
+import physics.PoseBehavior;
+import physics.shapes.AABB;
 import util.math.Vec3d;
 import vr.EyeCamera;
 
@@ -75,8 +75,8 @@ public class IceCaster extends Behavior {
         timer += dt();
         timer2 += dt();
 
-        PositionBehavior3d position = controller.player.position;
-        VelocityBehavior3d velocity = controller.player.velocity;
+        PoseBehavior pose = controller.player.pose;
+        PhysicsBehavior physics = controller.player.physics;
 
 //        double height = controller.player.physics.world.raycastDown(position.position);
 //        double speedMod = 8 + 50 * Math.pow(.7, height);
@@ -86,22 +86,22 @@ public class IceCaster extends Behavior {
 //        if (velocity.velocity.length() > 20) {
 //            velocity.velocity = velocity.velocity.setLength(20);
 //        }
-        Vec3d along = vel.setLength(vel.normalize().dot(velocity.velocity));
-        Vec3d opposite = velocity.velocity.sub(along);
-        Vec3d newVel = opposite.mul(Math.pow(.001, dt())).add(along).add(vel.mul(dt() * Math.exp(-.05 * velocity.velocity.dot(vel.normalize()))));
-        Vec3d accel = newVel.sub(velocity.velocity);
-        velocity.velocity = newVel;
+        Vec3d along = vel.setLength(vel.normalize().dot(physics.velocity));
+        Vec3d opposite = physics.velocity.sub(along);
+        Vec3d newVel = opposite.mul(Math.pow(.001, dt())).add(along).add(vel.mul(dt() * Math.exp(-.05 * physics.velocity.dot(vel.normalize()))));
+        Vec3d accel = newVel.sub(physics.velocity);
+        physics.velocity = newVel;
 
         if (timer2 > 0) {
             timer2 -= 1 / 30.;
-            createIce(position.position, position.position.add(velocity.velocity.mul(.3)), accel);
+            createIce(pose.position, pose.position.add(physics.velocity.mul(.3)), accel);
         }
     }
 
     @Override
     public void step() {
         if (controller.controller.trigger() > .01) {
-            Vec3d goalDir = controller.controller.forwards().lerp(EyeCamera.headTransform(new Vec3d(1, 0, 0)), .2);
+            Vec3d goalDir = controller.forwards().lerp(EyeCamera.headPose().applyRotation(new Vec3d(1, 0, 0)), .2);
             moveTowards(goalDir.mul(10 * controller.controller.trigger()));
         }
     }

@@ -77,7 +77,7 @@ public class RenderPipeline extends Behavior {
     @Override
     public void step() {
         if (isVR) {
-            EyeCamera.waitUpdatePos(Camera.camera3d.position);
+            EyeCamera.waitUpdatePos();
         }
         gpList.forEach(RenderPass::doPass);
         spList.forEach(RenderPass::doPass);

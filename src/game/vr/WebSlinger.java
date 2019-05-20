@@ -10,7 +10,7 @@ import graphics.renderables.ColorModel;
 import java.util.OptionalDouble;
 import util.math.Transformation;
 import util.math.Vec3d;
-import static vr.ViveInput.TRIGGER;
+import static vr.Vive.TRIGGER;
 
 public class WebSlinger extends Behavior {
 
@@ -54,7 +54,7 @@ public class WebSlinger extends Behavior {
     public void step() {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d start = controller.pos();
-            Vec3d dir = controller.controller.forwards();
+            Vec3d dir = controller.forwards();
             OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
             if (t.isPresent()) {
                 web = start.add(dir.mul(t.getAsDouble()));
@@ -70,9 +70,11 @@ public class WebSlinger extends Behavior {
             double exag = 10;
             prefLength = Math.min(prefLength, web.sub(controller.pos(exag)).length() - controller.controller.trigger());
             Vec3d pullDir = web.sub(controller.pos(exag)).normalize();
-            double strength = 10 * Math.max(controller.pos(exag).sub(web).length() - prefLength, 0);
-            controller.player.applyForce(pullDir.mul(strength), .02);
-            controller.player.applyForce(controller.controller.forwards().mul(2), 0);
+            double strength = 1000 * Math.max(controller.pos(exag).sub(web).length() - prefLength, 0);
+            controller.player.physics.applyForce(pullDir.mul(strength), controller.pos());
+
+            double thrustStrength = 200;
+            controller.player.physics.applyForce(controller.forwards().mul(thrustStrength), controller.pos());
 
 //            Vec3d pullDir = web.sub(controller.pos()).normalize();
 //            pullDir = pullDir.lerp(controller.controller.forwards(), .2);

@@ -1,7 +1,8 @@
-package physics;
+package physics.shapes;
 
 import java.util.Arrays;
 import java.util.OptionalDouble;
+import physics.CommonPhysics;
 import util.math.Vec3d;
 
 public class CapsuleShape extends CollisionShape {

@@ -5,7 +5,6 @@ import engine.Layer;
 import static game.Player.POSTPHYSICS;
 import game.RenderableBehavior;
 import static game.RenderableBehavior.createRB;
-import graphics.Camera;
 import graphics.models.VoxelModel2;
 import graphics.renderables.ColorModel;
 import graphics.renderables.ColorModelParticles;
@@ -14,7 +13,7 @@ import java.util.LinkedList;
 import util.math.Quaternion;
 import util.math.Transformation;
 import util.math.Vec3d;
-import static vr.ViveInput.TRIGGER;
+import static vr.Vive.TRIGGER;
 
 public class Teleport extends Behavior {
 
@@ -27,28 +26,28 @@ public class Teleport extends Behavior {
         controller.renderable.renderable = new ColorModel(VoxelModel2.load("controller_yellow.vox"));
         ColorModel markerModel = new ColorModel(VoxelModel2.load("singlevoxel.vox"));
         markerModel.color = new Vec3d(.6, .2, .8);
-        
+
         ColorModelParticles arcModel = new ColorModelParticles(VoxelModel2.load("singlevoxel.vox"));
         arcModel.color = new Vec3d(.6, .2, .8);
-        
+
         markerRB = createRB(new RenderableList(markerModel, arcModel));
         markerRB.beforeRender = () -> {
             Vec3d newPos = findPos();
             markerRB.visible = newPos != null;
             if (markerRB.visible) {
-                double scale = Math.min(1, newPos.sub(Camera.camera3d.position).length() / 20);
-                markerModel.t = Transformation.create(newPos.sub(scale/2), Quaternion.IDENTITY, scale);
-                
+                double scale = Math.min(1, newPos.sub(controller.pos()).length() / 20);
+                markerModel.t = Transformation.create(newPos.sub(scale / 2), Quaternion.IDENTITY, scale);
+
                 arcModel.transforms = new LinkedList();
                 Vec3d pos = controller.pos();
-                Vec3d vel = controller.controller.forwards();
+                Vec3d vel = controller.forwards();
                 for (int i = 0; i < 100; i++) {
                     Vec3d pos2 = pos.add(vel.mul(.5));
                     if (controller.player.physics.wouldCollideAt(pos2)) {
                         break;
                     }
-                    Vec3d dir = pos2.sub(pos);                
-                    double scale2 = Math.min(1, pos.sub(Camera.camera3d.position).length() / 20) / 4;
+                    Vec3d dir = pos2.sub(pos);
+                    double scale2 = Math.min(1, pos.sub(controller.pos()).length() / 20) / 4;
                     Vec3d dir1 = dir.cross(new Vec3d(0, 0, 1)).setLength(scale2);
                     Vec3d dir2 = dir1.cross(dir).setLength(scale2);
                     arcModel.transforms.add(Transformation.create(pos.sub(dir1.div(2)).sub(dir2.div(2)), dir, dir1, dir2));
@@ -69,7 +68,7 @@ public class Teleport extends Behavior {
         if (controller.player.physics.wouldCollideAt(pos)) {
             return null;
         }
-        Vec3d vel = controller.controller.forwards();
+        Vec3d vel = controller.forwards();
         for (int i = 0; i < 100; i++) {
             Vec3d pos2 = pos.add(vel.mul(.5));
             if (controller.player.physics.wouldCollideAt(pos2)) {
@@ -91,7 +90,7 @@ public class Teleport extends Behavior {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d newPos = findPos();
             if (newPos != null) {
-                controller.player.position.position = newPos;
+                controller.player.pose.position = newPos;
                 // controller.player.velocity.velocity = new Vec3d(0, 0, 0);
             }
         }

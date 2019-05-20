@@ -12,7 +12,7 @@ import java.util.OptionalDouble;
 import util.math.Transformation;
 import util.math.Vec3d;
 import vr.EyeCamera;
-import static vr.ViveInput.TRIGGER;
+import static vr.Vive.TRIGGER;
 
 public class Hand extends Behavior {
 
@@ -35,7 +35,7 @@ public class Hand extends Behavior {
             Vec3d v = handPos;
             if (v == null) {
                 Vec3d start = controller.pos();
-                Vec3d dir = controller.controller.forwards();
+                Vec3d dir = controller.forwards();
 //                double t = controller.player.physics.world.buildings.stream().mapToDouble(a -> a.raycast(start, dir))
 //                        .filter(d -> d >= 0).min().orElse(-1);
                 OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
@@ -70,7 +70,7 @@ public class Hand extends Behavior {
     public void step() {
         if (controller.controller.buttonJustPressed(TRIGGER)) {
             Vec3d start = controller.pos();
-            Vec3d dir = controller.controller.forwards();
+            Vec3d dir = controller.forwards();
             OptionalDouble t = controller.player.physics.world.collisionShape.raycast(start, dir);
             if (t.isPresent() && t.getAsDouble() <= 8) {
                 handPos = start.add(dir.mul(t.getAsDouble()));
@@ -81,7 +81,7 @@ public class Hand extends Behavior {
         if (controller.controller.buttonJustReleased(TRIGGER) && handPos != null) {
             handPos = null;
             if (jumpTimer > 0) {
-                controller.player.velocity.velocity = EyeCamera.headTransform(new Vec3d(1, 0, .5)).mul(25);
+                controller.player.physics.velocity = EyeCamera.headPose().applyRotation(new Vec3d(1, 0, .5)).mul(25);
                 jumpTimer = 0;
             } else {
                 jumpTimer = .2;
@@ -89,11 +89,12 @@ public class Hand extends Behavior {
         }
         if (handPos != null) {
             jumpTimer -= dt();
-            Vec3d dir = handPos.sub(controller.player.position.position).normalize();
-            controller.player.velocity.velocity = controller.player.velocity.velocity
+            Vec3d dir = handPos.sub(controller.player.pose.position).normalize();
+            controller.player.physics.velocity = controller.player.physics.velocity
                     .lerp(dir.mul(20), 1 - Math.pow(1e-6, dt()));
         } else if (!controller.player.physics.onGround) {
-            controller.player.applyForce(EyeCamera.headTransform(new Vec3d(1, 0, 0)).mul(3), .05);
+            controller.player.physics.applyForce(EyeCamera.headPose().applyRotation(new Vec3d(1, 0, 0)).mul(300),
+                    controller.player.physics.centerOfMass.get());
         }
     }
 }

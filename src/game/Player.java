@@ -1,51 +1,50 @@
 package game;
 
-import behaviors._3d.AccelerationBehavior3d;
-import behaviors._3d.PositionBehavior3d;
-import behaviors._3d.VelocityBehavior3d;
 import engine.Behavior;
 import static engine.Core.dt;
 import engine.Layer;
 import graphics.Camera;
 import physics.PhysicsBehavior;
+import physics.PoseBehavior;
 import util.math.Vec3d;
+import vr.EyeCamera;
 import vr.Vive;
-import vr.ViveInput;
 
 public class Player extends Behavior {
 
     public static final Layer POSTPHYSICS = new Layer(6);
 
-    public final PositionBehavior3d position = require(PositionBehavior3d.class);
-    public final VelocityBehavior3d velocity = require(VelocityBehavior3d.class);
-    public final AccelerationBehavior3d acceleration = require(AccelerationBehavior3d.class);
+    public final PoseBehavior pose = require(PoseBehavior.class);
     public final PhysicsBehavior physics = require(PhysicsBehavior.class);
 
     public Vec3d cameraOffset = new Vec3d(0, 0, .8);
+    public Vec3d prevVelocity = new Vec3d(0, 0, 0);
 
-    public void applyForce(Vec3d force, double dampening) {
-        if (velocity.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
-            Vec3d v = velocity.velocity.normalize();
-            Vec3d forceAlongVelocity = v.mul(v.dot(force));
-            double multiplier = -1 + Math.exp(-dampening * velocity.velocity.dot(force.normalize()));
-            force = force.add(forceAlongVelocity.mul(multiplier));
-        }
-        velocity.velocity = velocity.velocity.add(force.mul(dt()));
-    }
-
-    public void applyForce2(Vec3d force, double dampening) {
-        if (velocity.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
-            Vec3d v = velocity.velocity.normalize();
-            Vec3d forceAlongVelocity = v.mul(v.dot(force));
-            double multiplier = -1 + Math.log(1 + Math.exp(-dampening * velocity.velocity.dot(force.normalize())));
-            force = force.add(forceAlongVelocity.mul(multiplier));
-        }
-        velocity.velocity = velocity.velocity.add(force.mul(dt()));
-    }
-
+//    public void applyForce(Vec3d force, double dampening) {
+//        if (physics.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
+//            Vec3d v = physics.velocity.normalize();
+//            Vec3d forceAlongVelocity = v.mul(v.dot(force));
+//            double multiplier = -1 + Math.exp(-dampening * physics.velocity.dot(force.normalize()));
+//            force = force.add(forceAlongVelocity.mul(multiplier));
+//        }
+//        physics.velocity = physics.velocity.add(force.mul(dt()));
+//    }
+//
+//    public void applyForce2(Vec3d force, double dampening) {
+//        if (physics.velocity.lengthSquared() >= 1e-6 && force.lengthSquared() >= 1e-6) {
+//            Vec3d v = physics.velocity.normalize();
+//            Vec3d forceAlongVelocity = v.mul(v.dot(force));
+//            double multiplier = -1 + Math.log(1 + Math.exp(-dampening * physics.velocity.dot(force.normalize())));
+//            force = force.add(forceAlongVelocity.mul(multiplier));
+//        }
+//        physics.velocity = physics.velocity.add(force.mul(dt()));
+//    }
     @Override
     public void createInner() {
-        acceleration.acceleration = new Vec3d(0, 0, -10);
+        physics.acceleration = new Vec3d(0, 0, -10);
+        physics.allowRotation = true;
+        physics.centerOfMass = () -> Vive.footTransform.get().position().lerp(EyeCamera.headPose().position(), .5);
+        Vive.footTransform = () -> pose.getTransform().translate(new Vec3d(0, 0, -1));
     }
 
     @Override
@@ -56,15 +55,16 @@ public class Player extends Behavior {
     @Override
     public void step() {
         if (cameraOffset != null) {
-            Camera.camera3d.position = position.position.add(cameraOffset);
+            Camera.camera3d.position = pose.position.add(cameraOffset);
         }
-        double friction = physics.onGround ? 2 : 1e-6;
-        velocity.velocity = velocity.velocity.mul(Math.exp(-dt() * friction));
-        if (physics.velocityChange.lengthSquared() > 10) {
-            if (Vive.running) {
-                ViveInput.LEFT.hapticPulse(5);
-                ViveInput.RIGHT.hapticPulse(5);
+        double friction = physics.onGround ? 2 : 0;
+        physics.velocity = physics.velocity.mul(Math.exp(-dt() * friction));
+        if (Vive.running) {
+            if (physics.velocity.sub(prevVelocity).lengthSquared() > 50) {
+                Vive.LEFT.hapticPulse(5);
+                Vive.RIGHT.hapticPulse(5);
             }
         }
+        prevVelocity = physics.velocity;
     }
 }

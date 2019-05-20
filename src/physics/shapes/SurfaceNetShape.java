@@ -1,4 +1,4 @@
-package physics;
+package physics.shapes;
 
 import graphics.models.SurfaceNet;
 import java.util.ArrayList;

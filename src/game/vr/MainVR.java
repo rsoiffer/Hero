@@ -18,9 +18,8 @@ import static util.math.MathUtils.mod;
 import util.math.Vec2d;
 import util.math.Vec3d;
 import vr.Vive;
-import vr.ViveInput;
-import static vr.ViveInput.MENU;
-import static vr.ViveInput.TRACKPAD;
+import static vr.Vive.MENU;
+import static vr.Vive.TRACKPAD;
 
 public class MainVR {
 
@@ -35,9 +34,9 @@ public class MainVR {
         Vive.init();
 
         UPDATE.onStep(() -> {
-            ViveInput.update();
-            if (ViveInput.LEFT.buttonDown(MENU) && ViveInput.RIGHT.buttonDown(MENU)) {
-                ViveInput.resetRightLeft();
+            Vive.update();
+            if (Vive.LEFT.buttonDown(MENU) && Vive.RIGHT.buttonDown(MENU)) {
+                Vive.resetRightLeft();
                 Vive.resetSeatedZeroPose();
             }
         });
@@ -46,7 +45,7 @@ public class MainVR {
         world.create();
 
         Player p = new Player();
-        p.position.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
+        p.pose.position = new Vec3d(8 * BLOCK_WIDTH - 10, 2 * BLOCK_HEIGHT - 10, 10);
         p.physics.world = world;
         p.cameraOffset = new Vec3d(0, 0, -1);
         p.create();
@@ -67,12 +66,12 @@ public class MainVR {
         Mutable<Behavior> right = new Mutable(null);
 
         UPDATE.onStep(() -> {
-            if (ViveInput.LEFT.buttonJustPressed(TRACKPAD)) {
+            if (Vive.LEFT.buttonJustPressed(TRACKPAD)) {
                 if (left.o != null) {
                     left.o.destroy();
                     left.o = null;
                 }
-                Vec2d v = ViveInput.LEFT.trackpad();
+                Vec2d v = Vive.LEFT.trackpad();
                 leftType.o = floor(mod(Math.atan2(v.y, v.x) / (2 * Math.PI), 1) * c.length);
             }
             if (left.o == null) {
@@ -81,16 +80,16 @@ public class MainVR {
                 } catch (InstantiationException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
-                left.o.get(ControllerBehavior.class).controller = ViveInput.LEFT;
+                left.o.get(ControllerBehavior.class).controller = Vive.LEFT;
                 left.o.get(ControllerBehavior.class).player = p;
                 left.o.create();
             }
-            if (ViveInput.RIGHT.buttonJustPressed(TRACKPAD)) {
+            if (Vive.RIGHT.buttonJustPressed(TRACKPAD)) {
                 if (right.o != null) {
                     right.o.destroy();
                     right.o = null;
                 }
-                Vec2d v = ViveInput.RIGHT.trackpad();
+                Vec2d v = Vive.RIGHT.trackpad();
                 rightType.o = floor(mod(Math.atan2(v.y, -v.x) / (2 * Math.PI), 1) * c.length);
             }
             if (right.o == null) {
@@ -99,7 +98,7 @@ public class MainVR {
                 } catch (InstantiationException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
-                right.o.get(ControllerBehavior.class).controller = ViveInput.RIGHT;
+                right.o.get(ControllerBehavior.class).controller = Vive.RIGHT;
                 right.o.get(ControllerBehavior.class).player = p;
                 right.o.create();
             }

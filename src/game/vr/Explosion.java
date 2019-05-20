@@ -16,8 +16,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import util.math.MathUtils;
 import util.math.Vec3d;
-import vr.ViveInput;
-import static vr.ViveInput.TRIGGER;
+import vr.Vive;
+import static vr.Vive.TRIGGER;
 
 public class Explosion extends Behavior {
 
@@ -53,8 +53,8 @@ public class Explosion extends Behavior {
         charge += dt();
         charge = Math.min(charge, 1.5);
         if (controller.controller.buttonJustPressed(TRIGGER)) {
-            Vec3d pullDir = controller.controller.sideways();
-            if (controller.controller == ViveInput.LEFT) {
+            Vec3d pullDir = controller.sideways();
+            if (controller.controller == Vive.LEFT) {
                 pullDir = pullDir.mul(-1);
             }
 
@@ -62,10 +62,10 @@ public class Explosion extends Behavior {
 //            exag = Math.log(1 + Math.exp(.01 * exag));
 //            Vec3d impulse = pullDir.mul(charge * -15 * exag);
 //            controller.player.velocity.velocity = controller.player.velocity.velocity.add(impulse);
-            controller.player.applyForce2(pullDir.mul(charge * -10 / dt()), .05);
+            controller.player.physics.applyImpulse(pullDir.mul(charge * -1000), controller.pos());
 
             for (int i = 0; i < 1000 * charge; i++) {
-                particles.add(new Particle(controller.pos(), controller.player.velocity.velocity.add(
+                particles.add(new Particle(controller.pos(), controller.player.physics.velocity.add(
                         pullDir.mul(10).add(MathUtils.randomInSphere(new Random())).mul(5))));
             }
             charge = 0;

@@ -31,7 +31,7 @@ import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_FUNC;
 import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_MODE;
 import static org.lwjgl.opengl.GL30.GL_COMPARE_REF_TO_TEXTURE;
 import static org.lwjgl.opengl.GL30.GL_DEPTH_ATTACHMENT;
-import physics.AABB;
+import physics.shapes.AABB;
 import util.math.Transformation;
 import util.math.Vec3d;
 
