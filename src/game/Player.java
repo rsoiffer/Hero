@@ -42,7 +42,7 @@ public class Player extends Behavior {
     @Override
     public void createInner() {
         physics.acceleration = new Vec3d(0, 0, -10);
-        physics.allowRotation = true;
+        // physics.allowRotation = true;
         physics.centerOfMass = () -> Vive.footTransform.get().position().lerp(EyeCamera.headPose().position(), .5);
         Vive.footTransform = () -> pose.getTransform().translate(new Vec3d(0, 0, -1));
     }
